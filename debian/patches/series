@@ -1,0 +1,20 @@
+no_com_err
+runtests_gdb
+art_http_scripting
+versioned
+fix_manpage_spelling
+
+curl_links_with_rt
+CVE-2012-0036.patch
+CVE-2013-2174.patch
+CVE-2013-4545.patch
+CVE-2013-4545-regression.patch
+CVE-2013-6422.patch
+
+timecond.patch
+
+# the following two patches are reverted during build
+# any new patches must be added before them
+curl-tailmatch.patch
+gnutls
+nss
