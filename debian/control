@@ -1,9 +1,10 @@
 Source: curl
 Section: web
 Priority: optional
-Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Maintainer: Pexip AS <packaging@pexip.com>
+XSBC-Pexip-Original-Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Ramakrishnan Muthukrishnan <rkrishnan@debian.org>
-Uploaders: Alessandro Ghedini <al3xbio@gmail.com>,
+XSBC-Pexip-Original-Uploaders: Alessandro Ghedini <al3xbio@gmail.com>,
  Ian Jackson <ijackson@chiark.greenend.org.uk>,
  Luk Claes <luk@debian.org>
 Build-Depends: debhelper (>> 8.1.3),
@@ -27,6 +28,7 @@ Standards-Version: 3.9.2.0
 Vcs-Browser: http://git.debian.org/?p=collab-maint/curl.git
 Vcs-Git: git://git.debian.org/collab-maint/curl.git
 Homepage: http://curl.haxx.se
+XS-Pexip-Upstream: http://archive.ubuntu.com/ubuntu/ precise
 
 Package: curl
 Architecture: any

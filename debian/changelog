@@ -1,3 +1,9 @@
+curl (7.22.0-3ubuntu4.6pexip1) pexip; urgency=low
+
+  * Prepare Pexip packaging
+
+ -- John-Mark Bell <jmb@pexip.com>  Tue, 24 Dec 2013 14:04:22 +0000
+
 curl (7.22.0-3ubuntu4.6) precise-security; urgency=low
 
   * SECURITY UPDATE: missing CN verification when signature verification is
