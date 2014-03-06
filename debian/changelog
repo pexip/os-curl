@@ -1,8 +1,18 @@
-curl (7.22.0-3ubuntu4.6pexip1) pexip; urgency=low
+curl (7.22.0-3ubuntu4.7pexip1) pexip; urgency=low
 
   * Prepare Pexip packaging
 
- -- John-Mark Bell <jmb@pexip.com>  Tue, 24 Dec 2013 14:04:22 +0000
+ -- John-Mark Bell <jmb@pexip.com>  Thu, 06 Mar 2014 09:28:21 +0000
+
+curl (7.22.0-3ubuntu4.7) precise-security; urgency=medium
+
+  * SECURITY UPDATE: information disclosure via incorrect NTLM credential
+    reuse
+    - debian/patches/CVE-2014-0015.patch: don't reuse connections if NTLM
+      auth is used in lib/url.c.
+    - CVE-2014-0015
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Fri, 31 Jan 2014 08:35:16 -0500
 
 curl (7.22.0-3ubuntu4.6) precise-security; urgency=low
 
