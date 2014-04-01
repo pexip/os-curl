@@ -1,3 +1,24 @@
+curl (7.22.0-3ubuntu4.8) precise-security; urgency=medium
+
+  * SECURITY UPDATE: wrong re-use of connections
+    - debian/patches/CVE-2014-0138.patch: fix possible issues with NTLM
+      HTTP logic, and extend new connection logic to other protocols in
+      lib/http.c, lib/url.c, lib/urldata.h, add new tests to
+      tests/data/Makefile.am, tests/data/test1418, tests/data/test1419.
+    - CVE-2014-0138
+  * SECURITY UPDATE: incorrect wildcard SSL certificate validation with
+    literal IP addresses
+    - debian/patches/CVE-2014-0139.patch: fix wildcard logic in
+      lib/ssluse.c.
+    - CVE-2014-0139
+  * debian/patches/fix_test172.path: fix expired cookie causing test to
+    fail.
+  * debian/patches/disable_test519.path: disable test 519 as security
+    update causes it to hang. Fixing this would require backporting new
+    logic into tests/server/sws.c.
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Tue, 01 Apr 2014 17:02:01 -0400
+
 curl (7.22.0-3ubuntu4.7) precise-security; urgency=medium
 
   * SECURITY UPDATE: information disclosure via incorrect NTLM credential
