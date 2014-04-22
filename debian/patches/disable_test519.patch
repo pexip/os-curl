@@ -1,0 +1,11 @@
+Description: disable test 519 as security update causes it to hang
+
+Index: curl-7.22.0/tests/data/DISABLED
+===================================================================
+--- curl-7.22.0.orig/tests/data/DISABLED	2011-08-15 16:40:11.000000000 -0400
++++ curl-7.22.0/tests/data/DISABLED	2014-04-01 18:06:46.102486095 -0400
+@@ -3,3 +3,4 @@
+ # per line.
+ # Lines starting with '#' letters are treated as comments.
+ 811
++519

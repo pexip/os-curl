@@ -11,11 +11,14 @@ CVE-2013-4545.patch
 CVE-2013-4545-regression.patch
 CVE-2013-6422.patch
 CVE-2014-0015.patch
-
 timecond.patch
+curl-tailmatch.patch
+CVE-2014-0138.patch
+CVE-2014-0139.patch
+fix_test172.patch
+disable_test519.patch
 
 # the following two patches are reverted during build
 # any new patches must be added before them
-curl-tailmatch.patch
 gnutls
 nss
