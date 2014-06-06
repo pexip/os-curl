@@ -88,7 +88,7 @@ configure-stamp:
 	for flavour in build build-udeb build-gnutls build-nss; do \
 		(cd debian/$$flavour && ./buildconf) \
 	done
-	cd debian/build && ./configure ${CONFIGURE_ARGS} --with-librtmp --with-ca-path=/etc/ssl/certs
+	cd debian/build && ./configure ${CONFIGURE_ARGS} --without-librtmp --with-ca-path=/etc/ssl/certs
 	cd debian/build-udeb && ./configure ${CONFIGURE_ARGS_UDEB} --with-ca-path=/etc/ssl/certs \
 		--without-gnutls --without-nss --disable-ldap --disable-ldaps --disable-file --disable-ftp \
 		--disable-pop4 --disable-rtsp --disable-imap --disable-smtp --without-librtmp --without-libidn

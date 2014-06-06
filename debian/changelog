@@ -1,3 +1,9 @@
+curl (7.22.0-3ubuntu4.8pexip2) pexip; urgency=low
+
+  * Disable RTMP support
+
+ -- John-Mark Bell <jmb@pexip.com>  Fri, 06 Jun 2014 17:41:25 +0100
+
 curl (7.22.0-3ubuntu4.8pexip1) pexip; urgency=low
 
   * Upgrade to latest upstream release
