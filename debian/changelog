@@ -1,3 +1,14 @@
+curl (7.22.0-3ubuntu4.10) precise-security; urgency=medium
+
+  * SECURITY UPDATE: incorrect cookie handling via partial literal IP
+    addresses
+    - debian/patches/CVE-2014-3613.patch: only use full host matches for
+      hosts used as IP address in lib/cookie.c, added tests to
+      tests/data/test1105, tests/data/test31, tests/data/test8.
+    - CVE-2014-3613
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Fri, 12 Sep 2014 08:39:14 -0400
+
 curl (7.22.0-3ubuntu4.8) precise-security; urgency=medium
 
   * SECURITY UPDATE: wrong re-use of connections
