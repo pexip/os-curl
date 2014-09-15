@@ -1,3 +1,20 @@
+curl (7.22.0-3ubuntu4.10pexip1) pexip; urgency=low
+
+  * New upstream release.
+
+ -- John-Mark Bell <jmb@pexip.com>  Mon, 15 Sep 2014 23:01:07 +0100
+
+curl (7.22.0-3ubuntu4.10) precise-security; urgency=medium
+
+  * SECURITY UPDATE: incorrect cookie handling via partial literal IP
+    addresses
+    - debian/patches/CVE-2014-3613.patch: only use full host matches for
+      hosts used as IP address in lib/cookie.c, added tests to
+      tests/data/test1105, tests/data/test31, tests/data/test8.
+    - CVE-2014-3613
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Fri, 12 Sep 2014 08:39:14 -0400
+
 curl (7.22.0-3ubuntu4.8pexip2) pexip; urgency=low
 
   * Disable RTMP support
