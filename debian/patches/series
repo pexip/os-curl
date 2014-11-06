@@ -18,6 +18,7 @@ CVE-2014-0139.patch
 fix_test172.patch
 disable_test519.patch
 CVE-2014-3613.patch
+CVE-2014-3707.patch
 
 # the following two patches are reverted during build
 # any new patches must be added before them
