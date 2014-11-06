@@ -1,26 +1,14 @@
-no_com_err
-runtests_gdb
-art_http_scripting
-versioned
-fix_manpage_spelling
+01_runtests_gdb.patch
+02_art_http_scripting.patch
+03_keep_symbols_compat.patch
+04_workaround_as_needed_bug.patch
+06_always-disable-valgrind.patch
+07_do-not-disable-debug-symbols.patch
+08_fix-spelling.patch
+09_libtoolize_check.patch
+10_fix-resolver.patch
+11_CVE-2014-3707.patch
 
-curl_links_with_rt
-CVE-2012-0036.patch
-CVE-2013-2174.patch
-CVE-2013-4545.patch
-CVE-2013-4545-regression.patch
-CVE-2013-6422.patch
-CVE-2014-0015.patch
-timecond.patch
-curl-tailmatch.patch
-CVE-2014-0138.patch
-CVE-2014-0139.patch
-fix_test172.patch
-disable_test519.patch
-CVE-2014-3613.patch
-CVE-2014-3707.patch
-
-# the following two patches are reverted during build
-# any new patches must be added before them
-gnutls
-nss
+# do not add patches below
+90_gnutls.patch
+99_nss.patch
