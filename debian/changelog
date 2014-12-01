@@ -1,3 +1,20 @@
+curl (7.22.0-3ubuntu4.11pexip1) pexip; urgency=low
+
+  * New upstream release.
+
+ -- John-Mark Bell <jmb@pexip.com>  Mon, 01 Dec 2014 11:13:26 +0000
+
+curl (7.22.0-3ubuntu4.11) precise-security; urgency=medium
+
+  * SECURITY UPDATE: sensitive data disclosure via duphandle read out of
+    bounds
+    - debian/patches/CVE-2014-3707.patch: properly copy memory aread in
+      lib/formdata.c, lib/strdup.{c,h}, lib/url.c, lib/urldata.h,
+      src/Makefile.inc.
+    - CVE-2014-3707
+
+ -- Marc Deslauriers <marc.deslauriers@ubuntu.com>  Thu, 06 Nov 2014 12:03:12 -0500
+
 curl (7.22.0-3ubuntu4.10pexip1) pexip; urgency=low
 
   * New upstream release.
