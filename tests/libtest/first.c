@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2011, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2014, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -22,7 +22,15 @@
 #include "test.h"
 
 #ifdef HAVE_LOCALE_H
-#include <locale.h> /* for setlocale() */
+#  include <locale.h> /* for setlocale() */
+#endif
+
+#ifdef HAVE_IO_H
+#  include <io.h> /* for setmode() */
+#endif
+
+#ifdef HAVE_FCNTL_H
+#  include <fcntl.h> /* for setmode() */
 #endif
 
 #ifdef CURLDEBUG
@@ -30,25 +38,42 @@
 #  include "memdebug.h"
 #endif
 
-int select_test (int num_fds, fd_set *rd, fd_set *wr, fd_set *exc,
-                 struct timeval *tv)
+int select_wrapper(int nfds, fd_set *rd, fd_set *wr, fd_set *exc,
+                   struct timeval *tv)
 {
+  if(nfds < 0) {
+    SET_SOCKERRNO(EINVAL);
+    return -1;
+  }
 #ifdef USE_WINSOCK
-  /* Winsock doesn't like no socket set in 'rd', 'wr' or 'exc'. This is
-   * case when 'num_fds <= 0. So sleep.
+  /*
+   * Winsock select() requires that at least one of the three fd_set
+   * pointers is not NULL and points to a non-empty fdset. IOW Winsock
+   * select() can not be used to sleep without a single fd_set.
    */
-  if (num_fds <= 0) {
+  if(!nfds) {
     Sleep(1000*tv->tv_sec + tv->tv_usec/1000);
     return 0;
   }
 #endif
-  return select(num_fds, rd, wr, exc, tv);
+  return select(nfds, rd, wr, exc, tv);
+}
+
+void wait_ms(int ms)
+{
+  struct timeval t;
+  t.tv_sec = ms/1000;
+  ms -= (int)t.tv_sec * 1000;
+  t.tv_usec = ms * 1000;
+  select_wrapper(0, NULL, NULL , NULL, &t);
 }
 
 char *libtest_arg2=NULL;
 char *libtest_arg3=NULL;
 int test_argc;
 char **test_argv;
+
+struct timeval tv_test_start; /* for test timing */
 
 #ifdef UNITTESTS
 int unitfail; /* for unittests */
@@ -89,6 +114,14 @@ static void memory_tracking_init(void)
 int main(int argc, char **argv)
 {
   char *URL;
+
+#ifdef O_BINARY
+#  ifdef __HIGHC__
+  _setmode(stdout, O_BINARY);
+#  else
+  setmode(fileno(stdout), O_BINARY);
+#  endif
+#endif
 
   memory_tracking_init();
 

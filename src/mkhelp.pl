@@ -6,7 +6,7 @@
 #                            | (__| |_| |  _ <| |___
 #                             \___|\___/|_| \_\_____|
 #
-# Copyright (C) 1998 - 2011, Daniel Stenberg, <daniel@haxx.se>, et al.
+# Copyright (C) 1998 - 2014, Daniel Stenberg, <daniel@haxx.se>, et al.
 #
 # This software is licensed as described in the file COPYING, which
 # you should have received as part of this distribution. The terms
@@ -134,15 +134,13 @@ print <<HEAD
  * Generation time: $now
  */
 #ifdef USE_MANUAL
-#include "hugehelp.h"
+#include "tool_hugehelp.h"
 HEAD
     ;
 if($c) {
     print <<HEAD
 #include <zlib.h>
-#if defined(CURLDEBUG) && defined(CURLTOOLDEBUG)
-#include "memdebug.h"
-#endif
+#include "memdebug.h" /* keep this as LAST include */
 static const unsigned char hugehelpgz[] = {
   /* This mumbo-jumbo is the huge help text compressed with gzip.
      Thanks to this operation, the size of this data shrunk from $gzip
@@ -258,6 +256,10 @@ foot();
 
 sub foot {
   print <<FOOT
+#else /* !USE_MANUAL */
+/* built-in manual is disabled, blank function */
+#include "tool_hugehelp.h"
+void hugehelp(void) {}
 #endif /* USE_MANUAL */
 FOOT
   ;
