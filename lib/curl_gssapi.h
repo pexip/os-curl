@@ -22,7 +22,7 @@
  *
  ***************************************************************************/
 
-#include "setup.h"
+#include "curl_setup.h"
 #include "urldata.h"
 
 #ifdef HAVE_GSSAPI
@@ -39,18 +39,21 @@
 #  include <gssapi.h>
 #endif
 
+extern gss_OID_desc Curl_spnego_mech_oid;
+extern gss_OID_desc Curl_krb5_mech_oid;
 
-/* Common method for using gss api */
+/* Common method for using GSS-API */
 
 OM_uint32 Curl_gss_init_sec_context(
     struct SessionHandle *data,
-    OM_uint32 * minor_status,
-    gss_ctx_id_t * context,
+    OM_uint32 *minor_status,
+    gss_ctx_id_t *context,
     gss_name_t target_name,
+    gss_OID mech_type,
     gss_channel_bindings_t input_chan_bindings,
     gss_buffer_t input_token,
     gss_buffer_t output_token,
-    OM_uint32 * ret_flags);
+    OM_uint32 *ret_flags);
 
 #endif /* HAVE_GSSAPI */
 
