@@ -2,6 +2,7 @@ curl (7.38.0-3pexip1) pexip; urgency=low
 
   * New upstream release; migrate to Jessie
   * Disable RTMP and SSH support
+  * Disable NSS support
 
  -- John-Mark Bell <jmb@pexip.com>  Fri, 09 Jan 2015 20:31:17 +0000
 
