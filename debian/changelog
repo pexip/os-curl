@@ -1,3 +1,17 @@
+curl (7.38.0-4pexip1) pexip; urgency=low
+
+  * New upstream release
+
+ -- John-Mark Bell <jmb@pexip.com>  Fri, 09 Jan 2015 22:45:36 +0000
+
+curl (7.38.0-4) unstable; urgency=high
+
+  * Fix URL request injection vulnerability as per CVE-2014-8150
+    http://curl.haxx.se/docs/adv_20150108B.html
+  * Set urgency=high accordingly
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Thu, 08 Jan 2015 10:47:24 +0100
+
 curl (7.38.0-3pexip1) pexip; urgency=low
 
   * New upstream release; migrate to Jessie
