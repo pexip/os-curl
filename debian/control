@@ -27,7 +27,7 @@ Standards-Version: 3.9.2.0
 Vcs-Browser: http://git.debian.org/?p=collab-maint/curl.git
 Vcs-Git: git://git.debian.org/collab-maint/curl.git
 Homepage: http://curl.haxx.se
-XS-Pexip-Upstream: http://archive.ubuntu.com/ubuntu/ precise
+XS-Pexip-Upstream: http://ftp.debian.org/debian/ jessie
 
 Package: curl
 Architecture: any
