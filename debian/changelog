@@ -1,3 +1,17 @@
+curl (7.38.0-4+deb8u3pexip1) pexip; urgency=low
+
+  * New upstream release
+
+ -- John-Mark Bell <jmb@pexip.com>  Wed, 27 Jan 2016 23:57:36 +0000
+
+curl (7.38.0-4+deb8u3) jessie-security; urgency=medium
+
+  * Fix NTLM credentials not-checked for proxy connection re-use
+    as per CVE-2016-0755
+    http://curl.haxx.se/docs/adv_20160127A.htm
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Tue, 26 Jan 2016 22:39:38 +0000
+
 curl (7.38.0-4+deb8u2pexip1) pexip; urgency=low
 
   * New upstream release
