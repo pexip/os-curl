@@ -1,3 +1,20 @@
+curl (7.38.0-4+deb8u4pexip1) pexip; urgency=low
+
+  * New upstream release
+
+ -- John-Mark Bell <jmb@pexip.com>  Thu, 25 Aug 2016 23:04:31 +0100
+
+curl (7.38.0-4+deb8u4) jessie-security; urgency=high
+
+  * Fix TLS session resumption client cert bypass as per CVE-2016-5419
+    https://curl.haxx.se/docs/adv_20160803A.html
+  * Fix re-using connection with wrong client cert as per CVE-2016-5420
+    https://curl.haxx.se/docs/adv_20160803B.html
+  * Fix use of connection struct after free as per CVE-2016-5421
+    https://curl.haxx.se/docs/adv_20160803C.html
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Mon, 01 Aug 2016 12:19:28 +0100
+
 curl (7.38.0-4+deb8u3pexip1) pexip; urgency=low
 
   * New upstream release
