@@ -28,6 +28,10 @@
 29_CVE-2016-8622.patch
 30_CVE-2016-8623.patch
 31_CVE-2016-8624.patch
+32_CVE-2017-1000100.patch
+33_CVE-2017-1000101.patch
+34_CVE-2017-1000254.patch
+35_CVE-2017-1000257.patch
 no_ssl3.patch
 
 # do not add patches below
