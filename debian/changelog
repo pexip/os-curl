@@ -1,3 +1,19 @@
+curl (7.38.0-4+deb8u8pexip1) pexip; urgency=low
+
+  * New upstream release
+
+ -- John-Mark Bell <jmb@pexip.com>  Tue, 02 Jan 2018 15:13:50 +0000
+
+curl (7.38.0-4+deb8u8) jessie-security; urgency=high
+
+  * Non-maintainer upload by the Security Team.
+  * Fix NTLM buffer overflow via integer overflow as per CVE-2017-8816
+    https://curl.haxx.se/docs/adv_2017-11e7.html
+  * Fix FTP wildcard out of bounds read as per CVE-2017-8817
+    https://curl.haxx.se/docs/adv_2017-ae72.html
+
+ -- Yves-Alexis Perez <corsac@debian.org>  Sat, 25 Nov 2017 22:03:21 +0100
+
 curl (7.38.0-4+deb8u7pexip1) pexip; urgency=low
 
   * New upstream security release
