@@ -1,3 +1,16 @@
+curl (7.38.0-4+deb8u9pexip1) pexip; urgency=low
+
+  * New upstream release
+
+ -- John-Mark Bell <jmb@pexip.com>  Fri, 26 Jan 2018 12:11:37 +0000
+
+curl (7.38.0-4+deb8u9) jessie-security; urgency=high
+
+  * Fix HTTP authentication leak in redirects as per CVE-2018-1000007
+    https://curl.haxx.se/docs/adv_2018-b3bf.html
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Thu, 25 Jan 2018 22:34:49 +0000
+
 curl (7.38.0-4+deb8u8pexip1) pexip; urgency=low
 
   * New upstream release
