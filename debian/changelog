@@ -1,3 +1,17 @@
+curl (7.38.0-4+deb8u11pexip1) pexip; urgency=low
+
+  * New upstream release
+
+ -- John-Mark Bell <jmb@pexip.com>  Wed, 04 Jul 2018 12:03:06 +0100
+
+curl (7.38.0-4+deb8u11) jessie-security; urgency=high
+
+  * Fix heap buffer over-read when parsing bad RTSP headers
+    as per CVE-2018-1000301
+    https://curl.haxx.se/docs/adv_2018-b138.html
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Tue, 15 May 2018 23:05:31 +0100
+
 curl (7.38.0-4+deb8u10pexip1) pexip; urgency=low
 
   * New upstream release
