@@ -25,7 +25,7 @@ Standards-Version: 3.9.5
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/curl.git
 Vcs-Git: git://anonscm.debian.org/collab-maint/curl.git
 Homepage: http://curl.haxx.se
-XS-Pexip-Upstream: http://ftp.debian.org/debian/ jessie
+XS-Pexip-Upstream: http://ftp.debian.org/debian/ stretch
 
 Package: curl
 Architecture: any
