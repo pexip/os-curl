@@ -1,24 +1,18 @@
-curl (7.38.0-4+deb8u11pexip1) pexip; urgency=low
+curl (7.52.1-5+deb9u6pexip1) pexip; urgency=low
 
-  * New upstream release
+  * Migrate to Stretch
 
- -- John-Mark Bell <jmb@pexip.com>  Wed, 04 Jul 2018 12:03:06 +0100
+ -- John-Mark Bell <jmb@pexip.com>  Tue, 10 Jul 2018 18:14:32 +0100
 
-curl (7.38.0-4+deb8u11) jessie-security; urgency=high
+curl (7.52.1-5+deb9u6) stretch-security; urgency=high
 
   * Fix heap buffer over-read when parsing bad RTSP headers
     as per CVE-2018-1000301
     https://curl.haxx.se/docs/adv_2018-b138.html
 
- -- Alessandro Ghedini <ghedo@debian.org>  Tue, 15 May 2018 23:05:31 +0100
+ -- Alessandro Ghedini <ghedo@debian.org>  Tue, 15 May 2018 23:00:28 +0100
 
-curl (7.38.0-4+deb8u10pexip1) pexip; urgency=low
-
-  * New upstream release
-
- -- John-Mark Bell <jmb@pexip.com>  Thu, 15 Mar 2018 09:27:13 +0000
-
-curl (7.38.0-4+deb8u10) jessie-security; urgency=high
+curl (7.52.1-5+deb9u5) stretch-security; urgency=high
 
   * Fix NIL byte out of bounds write due to FTP path trickery
     as per CVE-2018-1000120
@@ -28,28 +22,18 @@ curl (7.38.0-4+deb8u10) jessie-security; urgency=high
   * Fix RTSP RTP buffer over-read as per CVE-2018-1000122
     https://curl.haxx.se/docs/adv_2018-b047.html
 
- -- Alessandro Ghedini <ghedo@debian.org>  Tue, 13 Mar 2018 20:47:46 +0000
+ -- Alessandro Ghedini <ghedo@debian.org>  Tue, 13 Mar 2018 00:46:06 +0000
 
-curl (7.38.0-4+deb8u9pexip1) pexip; urgency=low
+curl (7.52.1-5+deb9u4) stretch-security; urgency=high
 
-  * New upstream release
-
- -- John-Mark Bell <jmb@pexip.com>  Fri, 26 Jan 2018 12:11:37 +0000
-
-curl (7.38.0-4+deb8u9) jessie-security; urgency=high
-
+  * Fix HTTP/2 trailer out-of-bounds read as per CVE-2018-1000005
+    https://curl.haxx.se/docs/adv_2018-824a.html
   * Fix HTTP authentication leak in redirects as per CVE-2018-1000007
     https://curl.haxx.se/docs/adv_2018-b3bf.html
 
- -- Alessandro Ghedini <ghedo@debian.org>  Thu, 25 Jan 2018 22:34:49 +0000
+ -- Alessandro Ghedini <ghedo@debian.org>  Tue, 23 Jan 2018 21:56:56 +0000
 
-curl (7.38.0-4+deb8u8pexip1) pexip; urgency=low
-
-  * New upstream release
-
- -- John-Mark Bell <jmb@pexip.com>  Tue, 02 Jan 2018 15:13:50 +0000
-
-curl (7.38.0-4+deb8u8) jessie-security; urgency=high
+curl (7.52.1-5+deb9u3) stretch-security; urgency=high
 
   * Non-maintainer upload by the Security Team.
   * Fix NTLM buffer overflow via integer overflow as per CVE-2017-8816
@@ -57,22 +41,16 @@ curl (7.38.0-4+deb8u8) jessie-security; urgency=high
   * Fix FTP wildcard out of bounds read as per CVE-2017-8817
     https://curl.haxx.se/docs/adv_2017-ae72.html
 
- -- Yves-Alexis Perez <corsac@debian.org>  Sat, 25 Nov 2017 22:03:21 +0100
+ -- Yves-Alexis Perez <corsac@debian.org>  Sun, 26 Nov 2017 13:00:56 +0100
 
-curl (7.38.0-4+deb8u7pexip1) pexip; urgency=low
-
-  * New upstream security release
-
- -- Vincent Sanders <vince@pexip.com>  Thu, 02 nov 2017 14:44:27 +0000
-
-curl (7.38.0-4+deb8u7) jessie-security; urgency=medium
+curl (7.52.1-5+deb9u2) stretch-security; urgency=medium
 
   * Fix IMAP FETCH response out of bounds read as per CVE-2017-1000257
     https://curl.haxx.se/docs/adv_20171023.html
 
- -- Alessandro Ghedini <ghedo@debian.org>  Sun, 22 Oct 2017 22:01:06 +0100
+ -- Alessandro Ghedini <ghedo@debian.org>  Sun, 22 Oct 2017 21:23:30 +0100
 
-curl (7.38.0-4+deb8u6) jessie-security; urgency=medium
+curl (7.52.1-5+deb9u1) stretch-security; urgency=medium
 
   * Fix TFTP sends more than buffer size as per CVE-2017-1000100
     https://curl.haxx.se/docs/adv_20170809B.html
@@ -81,38 +59,228 @@ curl (7.38.0-4+deb8u6) jessie-security; urgency=medium
   * Fix FTP PWD response parser out of bounds read as per CVE-2017-1000254
     https://curl.haxx.se/docs/adv_20171004.html
 
- -- Alessandro Ghedini <ghedo@debian.org>  Sun, 01 Oct 2017 12:05:13 +0100
+ -- Alessandro Ghedini <ghedo@debian.org>  Sun, 01 Oct 2017 12:07:01 +0100
 
-curl (7.38.0-4+deb8u5pexip1) pexip; urgency=low
+curl (7.52.1-5) unstable; urgency=high
+
+  * Fix TLS session resumption client cert bypass as per CVE-2017-7468
+    https://curl.haxx.se/docs/adv_20170419.html
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Wed, 19 Apr 2017 11:19:50 +0100
+
+curl (7.52.1-4) unstable; urgency=medium
+
+  * Fix regression in CONNECT response handling (Closes: #857613)
+  * Fix buffer read overrun on --write-out as per CVE-2017-7407
+    https://curl.haxx.se/docs/adv_20170403.html (Closes: #859500)
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Sat, 08 Apr 2017 21:55:27 +0100
+
+curl (7.52.1-3) unstable; urgency=high
+
+  * Make SSL_VERIFYSTATUS work again as per CVE-2017-2629
+    https://curl.haxx.se/docs/adv_20170222.html
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Tue, 21 Feb 2017 22:38:41 +0000
+
+curl (7.52.1-2) unstable; urgency=medium
+
+  * Fix HTTPS connection timeout with OpenSSL (Closes: #852317)
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Sun, 29 Jan 2017 21:34:10 +0000
+
+curl (7.52.1-1) unstable; urgency=medium
 
   * New upstream release
+    - Fix printf floating point buffer overflow as per CVE-2016-9586
+      (Closes: #848958)
+  * B-D on "libssl1.0-dev | libssl-dev (<< 1.1)" (Closes: #850880, #844018)
+  * Another attempt at making -dev packages multi-arch.
+    Thanks to Benjamin Moody for the patches. (Closes: #731998, #846360)
+  * Enable support for PSL (Closes: #847958)
+  * Re-enable support for IDN (Closes: #849539)
+  * Drop 10_disable-network-tests.patch.
+    It didn't really work, and the issue is not urgent.
+  * Switch curl binary back to libcurl3/OpenSSL.
+    While the GnuTLS flavour mostly worked fine, there are a bunch of features
+    that are not implemented.
 
- -- John-Mark Bell <jmb@pexip.com>  Thu, 13 Apr 2017 17:44:27 +0100
+ -- Alessandro Ghedini <ghedo@debian.org>  Thu, 12 Jan 2017 22:02:44 +0000
 
-curl (7.38.0-4+deb8u5) jessie-security; urgency=high
+curl (7.51.0-1) unstable; urgency=medium
 
-  * Fix cookie injection for other servers as per CVE-2016-8615
-    https://curl.haxx.se/docs/adv_20161102A.html
-  * Fix case insensitive password comparison as per CVE-2016-8616
-    https://curl.haxx.se/docs/adv_20161102B.html
-  * Fix OOB write via unchecked multiplication as per CVE-2016-8617
-    https://curl.haxx.se/docs/adv_20161102C.html
-  * Fix double-free in curl_maprintf as per CVE-2016-8618
-    https://curl.haxx.se/docs/adv_20161102D.html
-  * Fix double-free in krb5 code as per CVE-2016-8619
-    https://curl.haxx.se/docs/adv_20161102E.html
-  * Fix glob parser write/read out of bounds as per CVE-2016-8620
-    https://curl.haxx.se/docs/adv_20161102F.html
-  * Fix curl_getdate read out of bounds as per CVE-2016-8621
-    https://curl.haxx.se/docs/adv_20161102G.html
-  * Fix URL unescape heap overflow via integer truncation as per CVE-2016-8622
-    https://curl.haxx.se/docs/adv_20161102H.html
-  * Fix use-after-free via shared cookies as per CVE-2016-8623
-    https://curl.haxx.se/docs/adv_20161102I.html
-  * Fix invalid URL parsing with '#' as per CVE-2016-8624
-    https://curl.haxx.se/docs/adv_20161102J.html
+  * New upstream release
+    - Fix cookie injection for other servers as per CVE-2016-8615
+      https://curl.haxx.se/docs/adv_20161102A.html
+    - Fix case insensitive password comparison as per CVE-2016-8616
+      https://curl.haxx.se/docs/adv_20161102B.html
+    - Fix OOB write via unchecked multiplication as per CVE-2016-8617
+      https://curl.haxx.se/docs/adv_20161102C.html
+    - Fix double-free in curl_maprintf as per CVE-2016-8618
+      https://curl.haxx.se/docs/adv_20161102D.html
+    - Fix double-free in krb5 code as per CVE-2016-8619
+      https://curl.haxx.se/docs/adv_20161102E.html
+    - Fix glob parser write/read out of bounds as per CVE-2016-8620
+      https://curl.haxx.se/docs/adv_20161102F.html
+    - Fix curl_getdate read out of bounds as per CVE-2016-8621
+      https://curl.haxx.se/docs/adv_20161102G.html
+    - Fix URL unescape heap overflow via integer truncation as per CVE-2016-8622
+      https://curl.haxx.se/docs/adv_20161102H.html
+    - Fix use-after-free via shared cookies as per CVE-2016-8623
+      https://curl.haxx.se/docs/adv_20161102I.html
+    - Fix invalid URL parsing with '#' as per CVE-2016-8624
+      https://curl.haxx.se/docs/adv_20161102J.html
+    - Fix IDNA 2003 makes curl use wrong host
+      https://curl.haxx.se/docs/adv_20161102K.html
+    - Fix escape and unescape integer overflows as
+      per CVE-2016-7167 (Closes: #837945)
+      https://curl.haxx.se/docs/adv_20160914.html
+    - Fix incorrect reuse of client certificates (NSS backend)
+      as per CVE-2016-7141 (Closes: #836918)
+      https://curl.haxx.se/docs/adv_20160907.html
+  * Drop 02_art_http_scripting.patch (file not shipped anymore)
+  * Refresh patches
+  * Temporarily disable IDN support
+  * Don't install pdf and html docs (they are not shipped in the tarball anymore)
+  * Install markdown docs
 
- -- Alessandro Ghedini <ghedo@debian.org>  Tue, 01 Nov 2016 21:38:10 +0000
+ -- Alessandro Ghedini <ghedo@debian.org>  Thu, 03 Nov 2016 22:46:14 +0000
+
+curl (7.50.1-2) unstable; urgency=medium
+
+  * Disable more network tests (Closes: #830273)
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Sun, 28 Aug 2016 14:48:05 +0100
+
+curl (7.50.1-1) unstable; urgency=medium
+
+  * New upstream release (Closes: #827900)
+    - Fix TLS session resumption client cert bypass as per CVE-2016-5419
+      https://curl.haxx.se/docs/adv_20160803A.html
+    - Fix re-using connection with wrong client cert as per CVE-2016-5420
+      https://curl.haxx.se/docs/adv_20160803B.html
+    - Fix use of connection struct after free as per CVE-2016-5421
+      https://curl.haxx.se/docs/adv_20160803C.html
+    - Support OpenSSL 1.1 (Closes: #828127)
+  * Fix 04_workaround_as_needed_bug.patch.
+    Thanks to Yuriy M. Kaminskiy for the patch (Closes: #818131)
+  * Bump Standards-Version to 3.9.8 (no changes needed)
+  * Update Vcs-* URLs
+  * Refresh patches
+  * Add 08_enable-zsh.patch to re-enable zsh completion generation
+  * Remove 08_fix-zsh-completion.patch (was already disabled)
+  * Add 09_fix-typo.patch to fix spelling-error-in-manpage
+  * Add 10_disable-network-tests.patch to disable networked tests
+    (Closes: #830273)
+  * Improve cross Build-Depends satisfiability.
+    Thanks to Helmut Grohne for the patch (Closes: #818092)
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Wed, 03 Aug 2016 12:46:05 +0100
+
+curl (7.47.0-1) unstable; urgency=high
+
+  * New upstream release
+    - Fix NTLM credentials not-checked for proxy connection re-use
+      as per CVE-2016-0755
+      http://curl.haxx.se/docs/adv_20160127A.html
+    - Set uyrgency=high accordingly
+  * Remove hard-coded dependency on libgnutls (Closes: #812542)
+  * Drop 08_fix-zsh-completion.patch (merged upstream)
+  * Refresh patches
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Wed, 27 Jan 2016 11:45:59 +0000
+
+curl (7.46.0-1) unstable; urgency=medium
+
+  * New upstream release
+    - Initialize OpenSSL algorithms after loading config (Closes: #805408)
+  * Install curl zsh completion (Closes: #805509)
+    - Add 08_fix-zsh-completion.patch to fix zsh completion generation
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Sun, 27 Dec 2015 18:18:09 +0100
+
+curl (7.45.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Drop 08_spelling.patch (merged upstream)
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Wed, 07 Oct 2015 12:59:03 +0200
+
+curl (7.44.0-2) unstable; urgency=medium
+
+  * Enable HTTP/2 support (Closes: #796302)
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Thu, 10 Sep 2015 11:25:14 +0200
+
+curl (7.44.0-1) unstable; urgency=medium
+
+  * New upstream release
+  * Refresh patches
+  * Update symbols files
+  * Add 08_spelling.patch to fix some spelling errors
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Wed, 12 Aug 2015 11:49:04 +0200
+
+curl (7.43.0-1) unstable; urgency=medium
+
+  * New upstream release
+    - Fix lingering HTTP credentials in connection re-use as per CVE-2015-3236
+      http://curl.haxx.se/docs/adv_20150617A.html
+    - Fix SMB send off unrelated memory contents as per CVE-2015-3237
+      http://curl.haxx.se/docs/adv_20150617B.html
+  * Refresh patches
+  * Fix spelling-error-in-description
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Wed, 17 Jun 2015 10:21:34 +0200
+
+curl (7.42.1-3) unstable; urgency=medium
+
+  * Update copyright
+  * Set both CA bundle and CA path default values for OpenSSL and GnuTLS
+    backends
+  * Bump versioned depends on libgnutls to workaround lack of nettle versioned
+    symbols (Closes: #787960)
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Sun, 07 Jun 2015 18:15:15 +0200
+
+curl (7.42.1-2) unstable; urgency=medium
+
+  * Switch curl binary to libcurl3-gnutls (Closes: #342719)
+    This is the first step of a possible migration to a GnuTLS-only
+    libcurl for Debian. Let's see how it goes.
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Sun, 03 May 2015 13:13:15 +0200
+
+curl (7.42.1-1) unstable; urgency=high
+
+  * New upstream release
+    - Don't send sensitive HTTP server headers to proxies as per
+      CVE-2015-3153
+      http://curl.haxx.se/docs/adv_20150429.html
+  * Drop 08_fix-spelling.patch (merged upstream)
+  * Refresh patches
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Wed, 29 Apr 2015 10:43:43 +0200
+
+curl (7.42.0-1) unstable; urgency=medium
+
+  * New upstream release
+    - Fix re-using authenticated connection when unauthenticated
+      as per CVE-2015-3143
+      http://curl.haxx.se/docs/adv_20150422A.html
+    - Fix host name out of boundary memory access as per CVE-2015-3144
+      http://curl.haxx.se/docs/adv_20150422D.html
+    - Fix cookie parser out of boundary memory access as per CVE-2015-3145
+      http://curl.haxx.se/docs/adv_20150422C.html
+    - Fix Negotiate not treated as connection-oriented as per CVE-2015-3148
+      http://curl.haxx.se/docs/adv_20150422B.html
+    - Disable SSLv3 in the OpenSSL backend when OPENSSL_NO_SSL3_METHOD is
+      defined (Closes: #768562)
+  * Drop patches merged upstream
+  * Refresh patches
+  * Bump Standards-Version to 3.9.6 (no changes needed)
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Wed, 22 Apr 2015 11:07:32 +0200
 
 curl (7.38.0-4+deb8u4pexip2) pexip; urgency=low
 
@@ -121,64 +289,6 @@ curl (7.38.0-4+deb8u4pexip2) pexip; urgency=low
     Disable SSLv3 if OpenSSL does not support it.
 
  -- John-Mark Bell <jmb@pexip.com>  Wed, 12 Oct 2016 05:24:53 +0100
-
-curl (7.38.0-4+deb8u4pexip1) pexip; urgency=low
-
-  * New upstream release
-
- -- John-Mark Bell <jmb@pexip.com>  Thu, 25 Aug 2016 23:04:31 +0100
-
-curl (7.38.0-4+deb8u4) jessie-security; urgency=high
-
-  * Fix TLS session resumption client cert bypass as per CVE-2016-5419
-    https://curl.haxx.se/docs/adv_20160803A.html
-  * Fix re-using connection with wrong client cert as per CVE-2016-5420
-    https://curl.haxx.se/docs/adv_20160803B.html
-  * Fix use of connection struct after free as per CVE-2016-5421
-    https://curl.haxx.se/docs/adv_20160803C.html
-
- -- Alessandro Ghedini <ghedo@debian.org>  Mon, 01 Aug 2016 12:19:28 +0100
-
-curl (7.38.0-4+deb8u3pexip1) pexip; urgency=low
-
-  * New upstream release
-
- -- John-Mark Bell <jmb@pexip.com>  Wed, 27 Jan 2016 23:57:36 +0000
-
-curl (7.38.0-4+deb8u3) jessie-security; urgency=medium
-
-  * Fix NTLM credentials not-checked for proxy connection re-use
-    as per CVE-2016-0755
-    http://curl.haxx.se/docs/adv_20160127A.htm
-
- -- Alessandro Ghedini <ghedo@debian.org>  Tue, 26 Jan 2016 22:39:38 +0000
-
-curl (7.38.0-4+deb8u2pexip1) pexip; urgency=low
-
-  * New upstream release
-
- -- John-Mark Bell <jmb@pexip.com>  Tue, 26 May 2015 13:12:53 +0100
-
-curl (7.38.0-4+deb8u2) jessie-security; urgency=high
-
-  * Don't send sensitive HTTP server headers to proxies as per CVE-2015-3153
-    http://curl.haxx.se/docs/adv_20150429.html
-
- -- Alessandro Ghedini <ghedo@debian.org>  Wed, 29 Apr 2015 10:47:47 +0200
-
-curl (7.38.0-4+deb8u1) jessie-security; urgency=high
-
-  * Fix re-using authenticated connection when unauthenticated
-    as per CVE-2015-3143
-    http://curl.haxx.se/docs/adv_20150422A.html
-  * Fix host name out of boundary memory access as per CVE-2015-3144
-    http://curl.haxx.se/docs/adv_20150422D.html
-  * Fix cookie parser out of boundary memory access as per CVE-2015-3145
-    http://curl.haxx.se/docs/adv_20150422C.html
-  * Fix Negotiate not treated as connection-oriented as per CVE-2015-3148
-    http://curl.haxx.se/docs/adv_20150422B.html
-
- -- Alessandro Ghedini <ghedo@debian.org>  Tue, 21 Apr 2015 13:16:29 +0200
 
 curl (7.38.0-4pexip1) pexip; urgency=low
 
