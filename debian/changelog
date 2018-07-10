@@ -1,6 +1,7 @@
 curl (7.52.1-5+deb9u6pexip1) pexip; urgency=low
 
   * Migrate to Stretch
+  * debian/patches/no_ssl3.patch: Drop; merged upstream
 
  -- John-Mark Bell <jmb@pexip.com>  Tue, 10 Jul 2018 18:14:32 +0100
 
