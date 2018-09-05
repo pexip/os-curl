@@ -1,3 +1,16 @@
+curl (7.52.1-5+deb9u7pexip1) pexip; urgency=low
+
+  * New upstream release
+
+ -- John-Mark Bell <jmb@pexip.com>  Tue, 04 Sep 2018 22:03:35 +0100
+
+curl (7.52.1-5+deb9u7) stretch-security; urgency=high
+
+  * Fix NTLM password overflow via integer overflow as per CVE-2018-14618
+    https://curl.haxx.se/docs/CVE-2018-14618.html
+
+ -- Alessandro Ghedini <ghedo@debian.org>  Mon, 03 Sep 2018 23:50:29 +0100
+
 curl (7.52.1-5+deb9u6pexip1) pexip; urgency=low
 
   * Migrate to Stretch
