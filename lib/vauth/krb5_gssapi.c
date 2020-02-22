@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 2014 - 2016, Steve Holme, <steve_holme@hotmail.com>.
+ * Copyright (C) 2014 - 2017, Steve Holme, <steve_holme@hotmail.com>.
  * Copyright (C) 2015, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
@@ -65,10 +65,10 @@ bool Curl_auth_is_gssapi_supported(void)
  *
  * data        [in]     - The session handle.
  * userp       [in]     - The user name.
- * passdwp     [in]     - The user's password.
+ * passwdp     [in]     - The user's password.
  * service     [in]     - The service type such as http, smtp, pop or imap.
  * host        [in[     - The host name.
- * mutual_auth [in]     - Flag specifing whether or not mutual authentication
+ * mutual_auth [in]     - Flag specifying whether or not mutual authentication
  *                        is enabled.
  * chlg64      [in]     - Pointer to the optional base64 encoded challenge
  *                        message.

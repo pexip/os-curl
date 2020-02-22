@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2016, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2019, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -36,6 +36,7 @@
 #include "slist.h"
 #include "urldata.h"
 #include "url.h"
+#include "setopt.h"
 #include "getinfo.h"
 #include "ccsidcurl.h"
 
@@ -218,13 +219,20 @@ slist_convert(int dccsid, struct curl_slist * from, int sccsid)
   struct curl_slist * to = (struct curl_slist *) NULL;
 
   for(; from; from = from->next) {
+    struct curl_slist *nl;
     char * cp = dynconvert(dccsid, from->data, -1, sccsid);
 
     if(!cp) {
       curl_slist_free_all(to);
       return (struct curl_slist *) NULL;
     }
-    to = Curl_slist_append_nodup(to, cp);
+    nl = Curl_slist_append_nodup(to, cp);
+    if(!nl) {
+      curl_slist_free_all(to);
+      free(cp);
+      return NULL;
+    }
+    to = nl;
   }
   return to;
 }
@@ -797,7 +805,7 @@ curl_formadd_ccsid(struct curl_httppost * * httppost,
   unsigned int contentccsid;
   unsigned int nameccsid;
 
-  /* A single curl_formadd() call cannot be splitted in several calls to deal
+  /* A single curl_formadd() call cannot be split in several calls to deal
      with all parameters: the original parameters are thus copied to a local
      curl_forms array and converted to ASCII when needed.
      CURLFORM_PTRNAME is processed as if it were CURLFORM_COPYNAME.
@@ -1124,7 +1132,7 @@ curl_easy_setopt_ccsid(CURL * curl, CURLoption tag, ...)
   if(testwarn) {
     testwarn = 0;
 
-    if((int) STRING_LASTZEROTERMINATED != (int) STRING_UNIX_SOCKET_PATH + 1 ||
+    if((int) STRING_LASTZEROTERMINATED != (int) STRING_DOH + 1 ||
        (int) STRING_LAST != (int) STRING_COPYPOSTFIELDS + 1)
       curl_mfprintf(stderr,
        "*** WARNING: curl_easy_setopt_ccsid() should be reworked ***\n");
@@ -1135,6 +1143,7 @@ curl_easy_setopt_ccsid(CURL * curl, CURLoption tag, ...)
 
   switch (tag) {
 
+  case CURLOPT_ABSTRACT_UNIX_SOCKET:
   case CURLOPT_CAINFO:
   case CURLOPT_CAPATH:
   case CURLOPT_COOKIE:
@@ -1145,6 +1154,7 @@ curl_easy_setopt_ccsid(CURL * curl, CURLoption tag, ...)
   case CURLOPT_CUSTOMREQUEST:
   case CURLOPT_DEFAULT_PROTOCOL:
   case CURLOPT_DNS_SERVERS:
+  case CURLOPT_DOH_URL:
   case CURLOPT_EGDSOCKET:
   case CURLOPT_ENCODING:
   case CURLOPT_FTPPORT:
@@ -1161,6 +1171,7 @@ curl_easy_setopt_ccsid(CURL * curl, CURLoption tag, ...)
   case CURLOPT_NOPROXY:
   case CURLOPT_PASSWORD:
   case CURLOPT_PINNEDPUBLICKEY:
+  case CURLOPT_PRE_PROXY:
   case CURLOPT_PROXY:
   case CURLOPT_PROXYPASSWORD:
   case CURLOPT_PROXYUSERNAME:
@@ -1176,18 +1187,19 @@ curl_easy_setopt_ccsid(CURL * curl, CURLoption tag, ...)
   case CURLOPT_PROXY_SSLKEY:
   case CURLOPT_PROXY_SSLKEYTYPE:
   case CURLOPT_PROXY_SSL_CIPHER_LIST:
+  case CURLOPT_PROXY_TLS13_CIPHERS:
   case CURLOPT_PROXY_TLSAUTH_PASSWORD:
   case CURLOPT_PROXY_TLSAUTH_TYPE:
   case CURLOPT_PROXY_TLSAUTH_USERNAME:
   case CURLOPT_RANDOM_FILE:
   case CURLOPT_RANGE:
   case CURLOPT_REFERER:
+  case CURLOPT_REQUEST_TARGET:
   case CURLOPT_RTSP_SESSION_ID:
   case CURLOPT_RTSP_STREAM_URI:
   case CURLOPT_RTSP_TRANSPORT:
   case CURLOPT_SERVICE_NAME:
   case CURLOPT_SOCKS5_GSSAPI_SERVICE:
-  case CURLOPT_SOCKS_PROXY:
   case CURLOPT_SSH_HOST_PUBLIC_KEY_MD5:
   case CURLOPT_SSH_KNOWNHOSTS:
   case CURLOPT_SSH_PRIVATE_KEYFILE:
@@ -1198,6 +1210,7 @@ curl_easy_setopt_ccsid(CURL * curl, CURLoption tag, ...)
   case CURLOPT_SSLKEY:
   case CURLOPT_SSLKEYTYPE:
   case CURLOPT_SSL_CIPHER_LIST:
+  case CURLOPT_TLS13_CIPHERS:
   case CURLOPT_TLSAUTH_PASSWORD:
   case CURLOPT_TLSAUTH_TYPE:
   case CURLOPT_TLSAUTH_USERNAME:
@@ -1286,7 +1299,7 @@ curl_easy_setopt_ccsid(CURL * curl, CURLoption tag, ...)
 
   case CURLOPT_ERRORBUFFER:                     /* This is an output buffer. */
   default:
-    result = Curl_setopt(data, tag, arg);
+    result = Curl_vsetopt(data, tag, arg);
     break;
     }
 
@@ -1341,4 +1354,125 @@ curl_pushheader_byname_ccsid(struct curl_pushheaders *h, const char *header,
   }
 
   return d;
+}
+
+static CURLcode
+mime_string_call(curl_mimepart *part, const char *string, unsigned int ccsid,
+                 CURLcode (*mimefunc)(curl_mimepart *part, const char *string))
+
+{
+  char *s = (char *) NULL;
+  CURLcode result;
+
+  if(!string)
+    return mimefunc(part, string);
+  s = dynconvert(ASCII_CCSID, string, -1, ccsid);
+  if(!s)
+    return CURLE_OUT_OF_MEMORY;
+
+  result = mimefunc(part, s);
+  free(s);
+  return result;
+}
+
+CURLcode
+curl_mime_name_ccsid(curl_mimepart *part, const char *name, unsigned int ccsid)
+
+{
+  return mime_string_call(part, name, ccsid, curl_mime_name);
+}
+
+CURLcode
+curl_mime_filename_ccsid(curl_mimepart *part,
+                         const char *filename, unsigned int ccsid)
+
+{
+  return mime_string_call(part, filename, ccsid, curl_mime_filename);
+}
+
+CURLcode
+curl_mime_type_ccsid(curl_mimepart *part,
+                     const char *mimetype, unsigned int ccsid)
+
+{
+  return mime_string_call(part, mimetype, ccsid, curl_mime_type);
+}
+
+CURLcode
+curl_mime_encoder_ccsid(curl_mimepart *part,
+                       const char *encoding, unsigned int ccsid)
+
+{
+  return mime_string_call(part, encoding, ccsid, curl_mime_encoder);
+}
+
+CURLcode
+curl_mime_filedata_ccsid(curl_mimepart *part,
+                         const char *filename, unsigned int ccsid)
+
+{
+  return mime_string_call(part, filename, ccsid, curl_mime_filedata);
+}
+
+CURLcode
+curl_mime_data_ccsid(curl_mimepart *part,
+                     const char *data, size_t datasize, unsigned int ccsid)
+
+{
+  char *s = (char *) NULL;
+  CURLcode result;
+
+  if(!data)
+    return curl_mime_data(part, data, datasize);
+  s = dynconvert(ASCII_CCSID, data, datasize, ccsid);
+  if(!s)
+    return CURLE_OUT_OF_MEMORY;
+
+  result = curl_mime_data(part, s, datasize);
+  free(s);
+  return result;
+}
+
+CURLUcode
+curl_url_get_ccsid(CURLU *handle, CURLUPart what, char **part,
+                   unsigned int flags, unsigned int ccsid)
+
+{
+  char *s = (char *)NULL;
+  CURLUcode result;
+
+  if(!part)
+    return CURLUE_BAD_PARTPOINTER;
+
+  *part = (char *)NULL;
+  result = curl_url_get(handle, what, &s, flags);
+  if(result == CURLUE_OK) {
+    if(s) {
+      *part = dynconvert(ccsid, s, -1, ASCII_CCSID);
+      if(!*part)
+        result = CURLUE_OUT_OF_MEMORY;
+    }
+  }
+  if(s)
+    free(s);
+  return result;
+}
+
+CURLUcode
+curl_url_set_ccsid(CURLU *handle, CURLUPart what, const char *part,
+                   unsigned int flags, unsigned int ccsid)
+
+{
+  char *s = (char *)NULL;
+  CURLUcode result;
+
+  if(part) {
+    s = dynconvert(ASCII_CCSID, part, -1, ccsid);
+    if(!s)
+      return CURLUE_OUT_OF_MEMORY;
+  }
+  result = curl_url_set(handle, what, s, flags);
+  if(s)
+    free(s);
+  return result;
 }
