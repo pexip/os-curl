@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 2016, Steve Holme, <steve_holme@hotmail.com>.
+ * Copyright (C) 2016 - 2017, Steve Holme, <steve_holme@hotmail.com>.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -26,6 +26,7 @@
 
 #include <curl/curl.h>
 #include "system_win32.h"
+#include "warnless.h"
 
 /* The last #include files should be: */
 #include "curl_memory.h"
@@ -68,7 +69,7 @@ typedef HMODULE (APIENTRY *LOADLIBRARYEX_FN)(LPCTSTR, HANDLE, DWORD);
  *
  * majorVersion [in] - The major version number.
  * minorVersion [in] - The minor version number.
- * platform     [in] - The optional platform identifer.
+ * platform     [in] - The optional platform identifier.
  * condition    [in] - The test condition used to specifier whether we are
  *                     checking a version less then, equal to or greater than
  *                     what is specified in the major and minor version
@@ -134,8 +135,9 @@ bool Curl_verify_windows_version(const unsigned int majorVersion,
       break;
 
     case VERSION_LESS_THAN_EQUAL:
-      if(osver.dwMajorVersion <= majorVersion &&
-         osver.dwMinorVersion <= minorVersion)
+      if(osver.dwMajorVersion < majorVersion ||
+        (osver.dwMajorVersion == majorVersion &&
+         osver.dwMinorVersion <= minorVersion))
         matched = TRUE;
       break;
 
@@ -146,8 +148,9 @@ bool Curl_verify_windows_version(const unsigned int majorVersion,
       break;
 
     case VERSION_GREATER_THAN_EQUAL:
-      if(osver.dwMajorVersion >= majorVersion &&
-         osver.dwMinorVersion >= minorVersion)
+      if(osver.dwMajorVersion > majorVersion ||
+        (osver.dwMajorVersion == majorVersion &&
+         osver.dwMinorVersion >= minorVersion))
         matched = TRUE;
       break;
 
@@ -278,7 +281,9 @@ HMODULE Curl_load_library(LPCTSTR filename)
 
   /* Attempt to find LoadLibraryEx() which is only available on Windows 2000
      and above */
-  pLoadLibraryEx = (LOADLIBRARYEX_FN) GetProcAddress(hKernel32, LOADLIBARYEX);
+  pLoadLibraryEx =
+    CURLX_FUNCTION_CAST(LOADLIBRARYEX_FN,
+                        (GetProcAddress(hKernel32, LOADLIBARYEX)));
 
   /* Detect if there's already a path in the filename and load the library if
      there is. Note: Both back slashes and forward slashes have been supported
