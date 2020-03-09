@@ -14,6 +14,7 @@ libcurl-nss.so.4 libcurl3-nss #MINVER#
  curl_easy_setopt@CURL_NSS_3 7.23.1
  curl_easy_strerror@CURL_NSS_3 7.23.1
  curl_easy_unescape@CURL_NSS_3 7.23.1
+ curl_easy_upkeep@CURL_NSS_3 7.63.0
  curl_escape@CURL_NSS_3 7.23.1
  curl_formadd@CURL_NSS_3 7.23.1
  curl_formfree@CURL_NSS_3 7.23.1
@@ -24,9 +25,22 @@ libcurl-nss.so.4 libcurl3-nss #MINVER#
  curl_global_cleanup@CURL_NSS_3 7.23.1
  curl_global_init@CURL_NSS_3 7.23.1
  curl_global_init_mem@CURL_NSS_3 7.23.1
+ curl_global_sslset@CURL_NSS_3 7.56.1
  curl_jmpenv@CURL_NSS_3 7.23.1
  curl_maprintf@CURL_NSS_3 7.23.1
  curl_mfprintf@CURL_NSS_3 7.23.1
+ curl_mime_addpart@CURL_NSS_3 7.56.1
+ curl_mime_data@CURL_NSS_3 7.56.1
+ curl_mime_data_cb@CURL_NSS_3 7.56.1
+ curl_mime_encoder@CURL_NSS_3 7.56.1
+ curl_mime_filedata@CURL_NSS_3 7.56.1
+ curl_mime_filename@CURL_NSS_3 7.56.1
+ curl_mime_free@CURL_NSS_3 7.56.1
+ curl_mime_headers@CURL_NSS_3 7.56.1
+ curl_mime_init@CURL_NSS_3 7.56.1
+ curl_mime_name@CURL_NSS_3 7.56.1
+ curl_mime_subparts@CURL_NSS_3 7.56.1
+ curl_mime_type@CURL_NSS_3 7.56.1
  curl_mprintf@CURL_NSS_3 7.23.1
  curl_msnprintf@CURL_NSS_3 7.23.1
  curl_msprintf@CURL_NSS_3 7.23.1
@@ -61,5 +75,10 @@ libcurl-nss.so.4 libcurl3-nss #MINVER#
  curl_strequal@CURL_NSS_3 7.23.1
  curl_strnequal@CURL_NSS_3 7.23.1
  curl_unescape@CURL_NSS_3 7.23.1
+ curl_url@CURL_NSS_3 7.63.0
+ curl_url_cleanup@CURL_NSS_3 7.63.0
+ curl_url_dup@CURL_NSS_3 7.63.0
+ curl_url_get@CURL_NSS_3 7.63.0
+ curl_url_set@CURL_NSS_3 7.63.0
  curl_version@CURL_NSS_3 7.23.1
  curl_version_info@CURL_NSS_3 7.23.1
