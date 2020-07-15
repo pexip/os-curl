@@ -1,3 +1,9 @@
+curl (7.64.0-4+deb10u1pexip3) pexip; urgency=medium
+
+  * Rebuild in buster environment
+
+ -- Steve McIntyre <steve.mcintyre@pexip.com>  Wed, 15 Jul 2020 17:40:44 +0000
+
 curl (7.64.0-4+deb10u1pexip2) pexip; urgency=medium
 
   * Bump Version for attempted re-merge
