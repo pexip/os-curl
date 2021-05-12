@@ -22,7 +22,7 @@ Build-Depends:
 #librtmp-dev,
 #libssh-dev,
 #libssh2-1-dev,
- libssl-dev,
+ libssl-dev (>= 3),
  libtool,
  libzstd-dev,
  openssh-server <!nocheck>,
@@ -109,7 +109,7 @@ Provides: libcurl-dev,
  libcurl3-openssl-dev,
  libcurl4-dev,
  libcurl3-dev
-Conflicts: libcurl4-gnutls-dev, libcurl4-nss-dev, libssl1.0-dev
+Conflicts: libcurl4-gnutls-dev, libcurl4-nss-dev, libssl1.0-dev, libssl-dev (<< 3)
 Depends: ${misc:Depends}, libcurl4 (= ${binary:Version})
 Suggests: libcurl4-doc,
  libidn11-dev,
@@ -117,7 +117,7 @@ Suggests: libcurl4-doc,
  libldap2-dev,
 # librtmp-dev,
 # libssh2-1-dev,
- libssl-dev,
+ libssl-dev (>= 3),
  pkg-config,
  zlib1g-dev
 Multi-Arch: same
