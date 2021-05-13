@@ -1,0 +1,508 @@
+diff --git a/lib/md5.c b/lib/md5.c
+index a17a58f..adb28df 100644
+--- a/lib/md5.c
++++ b/lib/md5.c
+@@ -85,11 +85,78 @@ static void MD5_Final(unsigned char digest[16], MD5_CTX * ctx)
+ 
+ #elif defined(USE_OPENSSL)
+ /* When OpenSSL is available we use the MD5-function from OpenSSL */
+-#include <openssl/md5.h>
++#include <openssl/opensslv.h>
+ #include "curl_memory.h"
+ /* The last #include file should be: */
+ #include "memdebug.h"
+ 
++#if OPENSSL_VERSION_NUMBER < 0x30000000L
++#include <openssl/md5.h>
++#else
++#include <openssl/crypto.h>
++#include <openssl/evp.h>
++#include <openssl/provider.h>
++
++typedef struct {
++  OSSL_LIB_CTX *lib_ctx;
++  OSSL_PROVIDER *provider;
++  EVP_MD_CTX *md_ctx;
++} MD5_CTX;
++
++static void MD5_Init(MD5_CTX * ctx)
++{
++  ctx->lib_ctx = OSSL_LIB_CTX_new();
++  if (ctx->lib_ctx == NULL)
++    return;
++  ctx->provider = OSSL_PROVIDER_try_load(ctx->lib_ctx, "default", 0);
++  if (ctx->provider == NULL) {
++    OSSL_LIB_CTX_free(ctx->lib_ctx);
++    memset(ctx, 0, sizeof(*ctx));
++    return;
++  }
++  ctx->md_ctx = EVP_MD_CTX_new();
++  if (ctx->md_ctx == NULL) {
++    OSSL_PROVIDER_unload(ctx->provider);
++    OSSL_LIB_CTX_free(ctx->lib_ctx);
++    memset(ctx, 0, sizeof(*ctx));
++    return;
++  }
++  if (EVP_DigestInit_ex2(ctx->md_ctx,
++                         EVP_MD_fetch(ctx->lib_ctx, "MD5", NULL),
++                         NULL) == 0) {
++    EVP_MD_CTX_free(ctx->md_ctx);
++    OSSL_PROVIDER_unload(ctx->provider);
++    OSSL_LIB_CTX_free(ctx->lib_ctx);
++    memset(ctx, 0, sizeof(*ctx));
++    return;
++  }
++}
++
++static void MD5_Update(MD5_CTX * ctx,
++                       const unsigned char *input,
++                       unsigned int inputLen)
++{
++  if (ctx->md_ctx == NULL)
++    return;
++
++  EVP_DigestUpdate(ctx->md_ctx, input, inputLen);
++}
++
++static void MD5_Final(unsigned char digest[16], MD5_CTX * ctx)
++{
++  if (ctx->md_ctx == NULL) {
++    memset(digest, 0, sizeof(*digest));
++    return;
++  }
++
++  EVP_DigestFinal_ex(ctx->md_ctx, digest, NULL);
++  EVP_MD_CTX_free(ctx->md_ctx);
++  OSSL_PROVIDER_unload(ctx->provider);
++  OSSL_LIB_CTX_free(ctx->lib_ctx);
++  memset(ctx, 0, sizeof(*ctx));
++}
++#endif
++
+ #elif (defined(__MAC_OS_X_VERSION_MAX_ALLOWED) && \
+               (__MAC_OS_X_VERSION_MAX_ALLOWED >= 1040)) || \
+       (defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && \
+diff --git a/lib/curl_des.c b/lib/curl_des.c
+index b123a00..953b9e6 100644
+--- a/lib/curl_des.c
++++ b/lib/curl_des.c
+@@ -22,7 +22,19 @@
+ 
+ #include "curl_setup.h"
+ 
+-#if defined(USE_NTLM) && !defined(USE_OPENSSL)
++#if defined(USE_NTLM)
++#  if defined(USE_OPENSSL)
++#    include <openssl/opensslv.h>
++#    if OPENSSL_VERSION_NUMBER >= 0x30000000L
++#      define WANT_IMPL 1
++#    else
++#      define WANT_IMPL 0
++#    endif
++#  else
++#    define WANT_IMPL 1
++#  endif /* USE_OPENSSL */
++
++#if WANT_IMPL
+ 
+ #include "curl_des.h"
+ 
+@@ -60,4 +72,6 @@ void Curl_des_set_odd_parity(unsigned char *bytes, size_t len)
+   }
+ }
+ 
+-#endif /* USE_NTLM && !USE_OPENSSL */
++#endif /* WANT_IMPL */
++
++#endif /* USE_NTLM */
+diff --git a/lib/curl_des.h b/lib/curl_des.h
+index 129060f..b4ebb72 100644
+--- a/lib/curl_des.h
++++ b/lib/curl_des.h
+@@ -24,11 +24,22 @@
+ 
+ #include "curl_setup.h"
+ 
+-#if defined(USE_NTLM) && !defined(USE_OPENSSL)
++#if defined(USE_NTLM)
++#  if defined(USE_OPENSSL)
++#    include <openssl/opensslv.h>
++#    if OPENSSL_VERSION_NUMBER >= 0x30000000L
+ 
+ /* Applies odd parity to the given byte array */
+ void Curl_des_set_odd_parity(unsigned char *bytes, size_t length);
+ 
+-#endif /* USE_NTLM && !USE_OPENSSL */
++#    endif
++#  else
++
++/* Applies odd parity to the given byte array */
++void Curl_des_set_odd_parity(unsigned char *bytes, size_t length);
++
++#  endif /* USE_OPENSSL */
++
++#endif /* USE_NTLM */
+ 
+ #endif /* HEADER_CURL_DES_H */
+diff --git a/lib/curl_ntlm_core.c b/lib/curl_ntlm_core.c
+index 9eb6c43..2b6ff50 100644
+--- a/lib/curl_ntlm_core.c
++++ b/lib/curl_ntlm_core.c
+@@ -54,24 +54,36 @@
+ 
+ #ifdef USE_OPENSSL
+ 
+-#  include <openssl/des.h>
+-#  ifndef OPENSSL_NO_MD4
+-#    include <openssl/md4.h>
+-#  endif
+-#  include <openssl/md5.h>
+-#  include <openssl/ssl.h>
+-#  include <openssl/rand.h>
+-#  if (OPENSSL_VERSION_NUMBER < 0x00907001L)
+-#    define DES_key_schedule des_key_schedule
+-#    define DES_cblock des_cblock
+-#    define DES_set_odd_parity des_set_odd_parity
+-#    define DES_set_key des_set_key
+-#    define DES_ecb_encrypt des_ecb_encrypt
+-#    define DESKEY(x) x
+-#    define DESKEYARG(x) x
++#  include <openssl/opensslv.h>
++#  if (OPENSSL_VERSION_NUMBER < 0x30000000L)
++#    include <openssl/des.h>
++#    ifndef OPENSSL_NO_MD4
++#      include <openssl/md4.h>
++#    endif
++#    include <openssl/md5.h>
++#    include <openssl/ssl.h>
++#    include <openssl/rand.h>
++#    if (OPENSSL_VERSION_NUMBER < 0x00907001L)
++#      define DES_key_schedule des_key_schedule
++#      define DES_cblock des_cblock
++#      define DES_set_odd_parity des_set_odd_parity
++#      define DES_set_key des_set_key
++#      define DES_ecb_encrypt des_ecb_encrypt
++#      define DESKEY(x) x
++#      define DESKEYARG(x) x
++#    else
++#      define DESKEYARG(x) *x
++#      define DESKEY(x) &x
++#    endif
+ #  else
+-#    define DESKEYARG(x) *x
++#    include <openssl/crypto.h>
++#    include <openssl/evp.h>
++#    include <openssl/provider.h>
++typedef unsigned char DES_key_schedule[8];
++typedef unsigned char DES_cblock[8];
+ #    define DESKEY(x) &x
++#    define DESKEYARG(x) *x
++#    define DES_ENCRYPT 1
+ #  endif
+ 
+ #elif defined(USE_GNUTLS_NETTLE)
+@@ -149,6 +161,62 @@ static void extend_key_56_to_64(const unsigned char *key_56, char *key)
+ }
+ 
+ #ifdef USE_OPENSSL
++#  if OPENSSL_VERSION_NUMBER >= 0x30000000L
++static void DES_set_odd_parity(DES_cblock *key)
++{
++  Curl_des_set_odd_parity(*key, sizeof(*key));
++}
++
++static void DES_set_key(DES_cblock *key, DES_key_schedule *des)
++{
++  memcpy(des, key, sizeof(*key));
++}
++
++static void DES_ecb_encrypt(DES_cblock *input, DES_cblock *output,
++                            DES_key_schedule *ks, int enc)
++{
++  OSSL_LIB_CTX *lib_ctx;
++  OSSL_PROVIDER *provider;
++  EVP_CIPHER_CTX *cipher_ctx;
++  EVP_CIPHER *cipher;
++  int len;
++
++  lib_ctx = OSSL_LIB_CTX_new();
++  if(lib_ctx == NULL)
++    return;
++  provider = OSSL_PROVIDER_try_load(lib_ctx, "legacy", 0);
++  if (provider == NULL) {
++    OSSL_LIB_CTX_free(lib_ctx);
++    return;
++  }
++  cipher_ctx = EVP_CIPHER_CTX_new();
++  if(cipher_ctx == NULL) {
++    OSSL_PROVIDER_unload(provider);
++    OSSL_LIB_CTX_free(lib_ctx);
++    return;
++  }
++  cipher = EVP_CIPHER_fetch(lib_ctx, "DES-ECB", NULL);
++  if(cipher == NULL) {
++    EVP_CIPHER_CTX_free(cipher_ctx);
++    OSSL_PROVIDER_unload(provider);
++    OSSL_LIB_CTX_free(lib_ctx);
++    return;
++  }
++  /* Disable padding */
++  EVP_CIPHER_CTX_set_padding(cipher_ctx, 0);
++  if(EVP_CipherInit_ex2(cipher_ctx, cipher, *ks, NULL, enc, NULL) == 0 ||
++     EVP_CipherUpdate(cipher_ctx,
++                      *output, &len, *input, sizeof(*input)) == 0 ||
++     EVP_CipherFinal_ex(cipher_ctx, *output + len, &len) == 0) {
++    /* Something went wrong */
++  }
++  EVP_CIPHER_free(cipher);
++  EVP_CIPHER_CTX_free(cipher_ctx);
++  OSSL_PROVIDER_unload(provider);
++  OSSL_LIB_CTX_free(lib_ctx);
++}
++#  endif
++
+ /*
+  * Turns a 56 bit key into the 64 bit, odd parity key and sets the key.  The
+  * key schedule ks is also set.
+@@ -568,10 +636,39 @@ CURLcode Curl_ntlm_core_mk_nt_hash(struct Curl_easy *data,
+   {
+     /* Create NT hashed password. */
+ #ifdef USE_OPENSSL
++#  if OPENSSL_VERSION_NUMBER < 0x30000000L
+     MD4_CTX MD4pw;
+     MD4_Init(&MD4pw);
+     MD4_Update(&MD4pw, pw, 2 * len);
+     MD4_Final(ntbuffer, &MD4pw);
++#  else
++    OSSL_LIB_CTX *lib_ctx;
++    OSSL_PROVIDER *provider;
++    EVP_MD_CTX *md_ctx;
++    EVP_MD *md;
++
++    lib_ctx = OSSL_LIB_CTX_new();
++    if(lib_ctx != NULL) {
++      provider = OSSL_PROVIDER_try_load(lib_ctx, "legacy", 0);
++      if(provider != NULL) {
++        md_ctx = EVP_MD_CTX_new();
++        if(md_ctx != NULL) {
++          md = EVP_MD_fetch(lib_ctx, "MD4", NULL);
++          if(md != NULL) {
++            if(EVP_DigestInit_ex2(md_ctx, md, NULL) == 0 ||
++               EVP_DigestUpdate(md_ctx, pw, 2 * len) == 0 ||
++               EVP_DigestFinal_ex(md_ctx, ntbuffer, NULL) == 0) {
++              /* Something went wrong */
++            }
++            EVP_MD_free(md);
++          }
++          EVP_MD_CTX_free(md_ctx);
++        }
++        OSSL_PROVIDER_unload(provider);
++      }
++      OSSL_LIB_CTX_free(lib_ctx);
++    }
++#  endif
+ #elif defined(USE_GNUTLS_NETTLE)
+     struct md4_ctx MD4pw;
+     md4_init(&MD4pw);
+diff --git a/lib/sha256.c b/lib/sha256.c
+index f9287af..b400d08 100644
+--- a/lib/sha256.c
++++ b/lib/sha256.c
+@@ -39,7 +39,56 @@
+ 
+ #ifdef USE_OPENSSL_SHA256
+ /* When OpenSSL is available we use the SHA256-function from OpenSSL */
+-#include <openssl/sha.h>
++#  if (OPENSSL_VERSION_NUMBER < 0x30000000L)
++#    include <openssl/sha.h>
++#  else
++#    include <openssl/crypto.h>
++#    include <openssl/evp.h>
++#    include <openssl/provider.h>
++#    include "curl_memory.h"
++#    include "memdebug.h"
++
++typedef struct {
++  EVP_MD_CTX *md_ctx;
++} SHA256_CTX;
++
++static void SHA256_Init(SHA256_CTX * ctx)
++{
++  ctx->md_ctx = EVP_MD_CTX_new();
++  if (ctx->md_ctx == NULL) {
++    return;
++  }
++  if (EVP_DigestInit_ex2(ctx->md_ctx,
++                         EVP_MD_fetch(NULL, "SHA256", NULL),
++                         NULL) == 0) {
++    EVP_MD_CTX_free(ctx->md_ctx);
++    memset(ctx, 0, sizeof(*ctx));
++    return;
++  }
++}
++
++static void SHA256_Update(SHA256_CTX * ctx,
++                          const unsigned char *input,
++                          unsigned int inputLen)
++{
++  if (ctx->md_ctx == NULL)
++    return;
++
++  EVP_DigestUpdate(ctx->md_ctx, input, inputLen);
++}
++
++static void SHA256_Final(unsigned char digest[16], SHA256_CTX * ctx)
++{
++  if (ctx->md_ctx == NULL) {
++    memset(digest, 0, sizeof(*digest));
++    return;
++  }
++
++  EVP_DigestFinal_ex(ctx->md_ctx, digest, NULL);
++  EVP_MD_CTX_free(ctx->md_ctx);
++  memset(ctx, 0, sizeof(*ctx));
++}
++#  endif
+ #else
+ 
+ /* When no other crypto library is available we use this code segment */
+diff --git a/lib/vtls/openssl.c b/lib/vtls/openssl.c
+index 9d11b89..a55d1e4 100644
+--- a/lib/vtls/openssl.c
++++ b/lib/vtls/openssl.c
+@@ -70,10 +70,15 @@
+ #endif
+ 
+ #if (OPENSSL_VERSION_NUMBER >= 0x0090700fL) && /* 0.9.7 or later */     \
++  (OPENSSL_VERSION_NUMBER < 0x30000000L) && /* earlier than 3.0.0 */    \
+   !defined(OPENSSL_NO_ENGINE)
+ #define USE_OPENSSL_ENGINE
+ #include <openssl/engine.h>
+ #endif
++
++#if (OPENSSL_VERSION_NUMBER >= 0x30000000L)
++#include <openssl/core_names.h>
++#endif
+ 
+ #include "warnless.h"
+ #include "non-ascii.h" /* for Curl_convert_from_utf8 prototype */
+@@ -929,7 +934,7 @@ int cert_stuff(struct connectdata *conn,
+       EVP_PKEY_free(pktmp);
+     }
+ 
+-#if !defined(OPENSSL_NO_RSA) && !defined(OPENSSL_IS_BORINGSSL)
++#if !defined(OPENSSL_NO_RSA) && !defined(OPENSSL_IS_BORINGSSL) && (OPENSSL_VERSION_NUMBER < 0x30000000L)
+     {
+       /* If RSA is used, don't check the private key if its flags indicate
+        * it doesn't support it. */
+@@ -2567,7 +2572,7 @@ static CURLcode ossl_connect_step1(struct connectdata *conn, int sockindex)
+   SSL_CTX_set_post_handshake_auth(BACKEND->ctx, 1);
+ #endif
+ 
+-#ifdef USE_TLS_SRP
++#ifdef USE_TLS_SRP /*&& (OPENSSL_VERSION_NUMBER < 0x30000000L)*/
+   if(ssl_authtype == CURL_TLSAUTH_SRP) {
+     char * const ssl_username = SSL_SET_OPTION(username);
+ 
+@@ -3122,6 +3127,7 @@ static CURLcode get_cert_chain(struct connectdata *conn,
+       switch(pktype) {
+       case EVP_PKEY_RSA:
+       {
++#if OPENSSL_VERSION_NUMBER < 0x30000000L
+         RSA *rsa;
+ #ifdef HAVE_OPAQUE_EVP_PKEY
+         rsa = EVP_PKEY_get0_RSA(pubkey);
+@@ -3146,12 +3152,27 @@ static CURLcode get_cert_chain(struct connectdata *conn,
+         print_pubkey_BN(rsa, n, i);
+         print_pubkey_BN(rsa, e, i);
+ #endif
++#else
++        BIGNUM *n = NULL;
++        BIGNUM *e = NULL;
++
++        push_certinfo("RSA Public Key", i);
++        if(EVP_PKEY_get_bn_param(pubkey, OSSL_PKEY_PARAM_RSA_N, &n)) {
++          print_pubkey_BN(rsa, n, i);
++          BN_free(n);
++        }
++        if(EVP_PKEY_get_bn_param(pubkey, OSSL_PKEY_PARAM_RSA_E, &e)) {
++          print_pubkey_BN(rsa, e, i);
++          BN_free(e);
++        }
++#endif
+ 
+         break;
+       }
+       case EVP_PKEY_DSA:
+       {
+ #ifndef OPENSSL_NO_DSA
++#if OPENSSL_VERSION_NUMBER < 0x30000000L
+         DSA *dsa;
+ #ifdef HAVE_OPAQUE_EVP_PKEY
+         dsa = EVP_PKEY_get0_DSA(pubkey);
+@@ -3179,11 +3200,35 @@ static CURLcode get_cert_chain(struct connectdata *conn,
+         print_pubkey_BN(dsa, g, i);
+         print_pubkey_BN(dsa, pub_key, i);
+ #endif
++#else
++        BIGNUM *p = NULL;
++        BIGNUM *q = NULL;
++        BIGNUM *g = NULL;
++        BIGNUM *pub_key = NULL;
++
++        if(EVP_PKEY_get_bn_param(pubkey, OSSL_PKEY_PARAM_FFC_P, &p)) {
++          print_pubkey_BN(dsa, p, i);
++          BN_free(p);
++        }
++        if(EVP_PKEY_get_bn_param(pubkey, OSSL_PKEY_PARAM_FFC_Q, &q)) {
++          print_pubkey_BN(dsa, q, i);
++          BN_free(q);
++        }
++        if(EVP_PKEY_get_bn_param(pubkey, OSSL_PKEY_PARAM_FFC_G, &g)) {
++          print_pubkey_BN(dsa, g, i);
++          BN_free(g);
++        }
++        if(EVP_PKEY_get_bn_param(pubkey, OSSL_PKEY_PARAM_PUB_KEY, &pub_key)) {
++          print_pubkey_BN(dsa, pub_key, i);
++          BN_free(pub_key);
++        }
++#endif
+ #endif /* !OPENSSL_NO_DSA */
+         break;
+       }
+       case EVP_PKEY_DH:
+       {
++#if OPENSSL_VERSION_NUMBER < 0x30000000L
+         DH *dh;
+ #ifdef HAVE_OPAQUE_EVP_PKEY
+         dh = EVP_PKEY_get0_DH(pubkey);
+@@ -3208,6 +3253,29 @@ static CURLcode get_cert_chain(struct connectdata *conn,
+         print_pubkey_BN(dh, g, i);
+         print_pubkey_BN(dh, pub_key, i);
+ #endif
++#else
++        BIGNUM *p = NULL;
++        BIGNUM *q = NULL;
++        BIGNUM *g = NULL;
++        BIGNUM *pub_key = NULL;
++
++        if(EVP_PKEY_get_bn_param(pubkey, OSSL_PKEY_PARAM_FFC_P, &p)) {
++          print_pubkey_BN(dsa, p, i);
++          BN_free(p);
++        }
++        if(EVP_PKEY_get_bn_param(pubkey, OSSL_PKEY_PARAM_FFC_Q, &q)) {
++          print_pubkey_BN(dsa, q, i);
++          BN_free(q);
++        }
++        if(EVP_PKEY_get_bn_param(pubkey, OSSL_PKEY_PARAM_FFC_G, &g)) {
++          print_pubkey_BN(dsa, g, i);
++          BN_free(g);
++        }
++        if(EVP_PKEY_get_bn_param(pubkey, OSSL_PKEY_PARAM_PUB_KEY, &pub_key)) {
++          print_pubkey_BN(dsa, pub_key, i);
++          BN_free(pub_key);
++        }
++#endif
+         break;
+       }
+ #if 0

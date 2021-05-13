@@ -1,6 +1,7 @@
 curl (7.64.0-4+deb10u2pexip2) pexip; urgency=medium
 
   * Build-Depend on libssl3-dev
+  * d/p/openssl3-support.patch: Remove use of APIs deprecated in OpenSSL 3.0
 
  -- John-Mark Bell <jmb@pexip.com>  Wed, 12 May 2021 14:19:47 +0100
 

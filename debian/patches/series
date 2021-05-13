@@ -20,6 +20,8 @@
 26_CVE-2021-22876.patch
 27_CVE-2021-22890.patch
 
+openssl3-support.patch
+
 # do not add patches below
 90_gnutls.patch
 99_nss.patch
