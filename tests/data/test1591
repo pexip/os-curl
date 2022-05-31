@@ -19,7 +19,7 @@ Server: test-server/fake
 # Client-side
 <client>
 <features>
-HTTP
+http
 </features>
 <server>
 http
@@ -40,9 +40,6 @@ more than one byte
 
 # Verify data after the test has been "shot"
 <verify>
-<strip>
-^User-Agent:.*
-</strip>
 <protocol>
 PUT /bzz/1591 HTTP/1.1
 Host: %HOSTIP:%HTTPPORT
