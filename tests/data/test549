@@ -32,7 +32,6 @@ http
 </server>
 <features>
 ftp
-proxy
 </features>
 <tool>
 lib549
@@ -49,6 +48,9 @@ ftp://www.example.com/moo/549 http://%HOSTIP:%HTTPPORT
 #
 # Verify data after the test has been "shot"
 <verify>
+<strip>
+^User-Agent:.*
+</strip>
 <protocol>
 GET ftp://www.example.com/moo/549;type=i HTTP/1.1
 Host: www.example.com:21

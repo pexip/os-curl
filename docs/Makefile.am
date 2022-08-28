@@ -5,11 +5,11 @@
 #                            | (__| |_| |  _ <| |___
 #                             \___|\___/|_| \_\_____|
 #
-# Copyright (C) 1998 - 2020, Daniel Stenberg, <daniel@haxx.se>, et al.
+# Copyright (C) 1998 - 2018, Daniel Stenberg, <daniel@haxx.se>, et al.
 #
 # This software is licensed as described in the file COPYING, which
 # you should have received as part of this distribution. The terms
-# are also available at https://curl.se/docs/copyright.html.
+# are also available at https://curl.haxx.se/docs/copyright.html.
 #
 # You may opt to use, copy, modify, merge, publish, distribute and/or sell
 # copies of the Software, and permit persons to whom the Software is
@@ -42,51 +42,44 @@ CLEANFILES = $(GENHTMLPAGES) $(PDFPAGES) $(MANDISTPAGES) curl.1
 
 EXTRA_DIST =                                    \
  $(noinst_man_MANS)                             \
- ALTSVC.md                                      \
  BINDINGS.md                                    \
- BUG-BOUNTY.md                                  \
- BUGS.md                                        \
+ BUGS                                           \
  CHECKSRC.md                                    \
  CIPHERS.md                                     \
  CMakeLists.txt                                 \
  CODE_OF_CONDUCT.md                             \
- CODE_REVIEW.md                                 \
  CODE_STYLE.md                                  \
  CONTRIBUTE.md                                  \
- CURL-DISABLE.md                                \
  DEPRECATE.md                                   \
- DYNBUF.md                                      \
- ECH.md                                         \
- EXPERIMENTAL.md                                \
  FAQ                                            \
- FEATURES.md                                    \
+ FEATURES                                       \
  GOVERNANCE.md                                  \
  HELP-US.md                                     \
  HISTORY.md                                     \
- HSTS.md                                        \
  HTTP-COOKIES.md                                \
  HTTP2.md                                       \
- HTTP3.md                                       \
  INSTALL                                        \
  INSTALL.cmake                                  \
  INSTALL.md                                     \
  INTERNALS.md                                   \
  KNOWN_BUGS                                     \
+ LICENSE-MIXING.md                              \
  MAIL-ETIQUETTE                                 \
- MQTT.md                                        \
- NEW-PROTOCOL.md                                \
- options-in-versions                            \
- PARALLEL-TRANSFERS.md                          \
+ MANUAL                                         \
+ README.cmake                                   \
  README.md                                      \
+ README.netware                                 \
+ README.win32                                   \
  RELEASE-PROCEDURE.md                           \
+ RESOURCES                                      \
  ROADMAP.md                                     \
  SECURITY-PROCESS.md                            \
  SSL-PROBLEMS.md                                \
  SSLCERTS.md                                    \
  THANKS                                         \
  TODO                                           \
- TheArtOfHttpScripting.md                       \
- VERSIONS.md
+ TheArtOfHttpScripting                          \
+ VERSIONS
 
 MAN2HTML= roffit $< >$@
 

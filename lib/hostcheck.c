@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2020, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2018, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.se/docs/copyright.html.
+ * are also available at https://curl.haxx.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -127,14 +127,16 @@ static int hostmatch(char *hostname, char *pattern)
 
 int Curl_cert_hostcheck(const char *match_pattern, const char *hostname)
 {
+  char *matchp;
+  char *hostp;
   int res = 0;
   if(!match_pattern || !*match_pattern ||
       !hostname || !*hostname) /* sanity check */
     ;
   else {
-    char *matchp = strdup(match_pattern);
+    matchp = strdup(match_pattern);
     if(matchp) {
-      char *hostp = strdup(hostname);
+      hostp = strdup(hostname);
       if(hostp) {
         if(hostmatch(hostp, matchp) == CURL_HOST_MATCH)
           res = 1;

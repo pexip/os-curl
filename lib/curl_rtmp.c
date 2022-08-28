@@ -5,12 +5,12 @@
  *                | (__| |_| |  _ <| |___
  *                 \___|\___/|_| \_\_____|
  *
- * Copyright (C) 2012 - 2020, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 2012 - 2015, Daniel Stenberg, <daniel@haxx.se>, et al.
  * Copyright (C) 2010, Howard Chu, <hyc@highlandsun.com>
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.se/docs/copyright.html.
+ * are also available at https://curl.haxx.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -79,7 +79,6 @@ const struct Curl_handler Curl_handler_rtmp = {
   ZERO_NULL,                            /* connection_check */
   PORT_RTMP,                            /* defport */
   CURLPROTO_RTMP,                       /* protocol */
-  CURLPROTO_RTMP,                       /* family */
   PROTOPT_NONE                          /* flags*/
 };
 
@@ -101,7 +100,6 @@ const struct Curl_handler Curl_handler_rtmpt = {
   ZERO_NULL,                            /* connection_check */
   PORT_RTMPT,                           /* defport */
   CURLPROTO_RTMPT,                      /* protocol */
-  CURLPROTO_RTMPT,                      /* family */
   PROTOPT_NONE                          /* flags*/
 };
 
@@ -123,7 +121,6 @@ const struct Curl_handler Curl_handler_rtmpe = {
   ZERO_NULL,                            /* connection_check */
   PORT_RTMP,                            /* defport */
   CURLPROTO_RTMPE,                      /* protocol */
-  CURLPROTO_RTMPE,                      /* family */
   PROTOPT_NONE                          /* flags*/
 };
 
@@ -145,7 +142,6 @@ const struct Curl_handler Curl_handler_rtmpte = {
   ZERO_NULL,                            /* connection_check */
   PORT_RTMPT,                           /* defport */
   CURLPROTO_RTMPTE,                     /* protocol */
-  CURLPROTO_RTMPTE,                     /* family */
   PROTOPT_NONE                          /* flags*/
 };
 
@@ -167,7 +163,6 @@ const struct Curl_handler Curl_handler_rtmps = {
   ZERO_NULL,                            /* connection_check */
   PORT_RTMPS,                           /* defport */
   CURLPROTO_RTMPS,                      /* protocol */
-  CURLPROTO_RTMP,                       /* family */
   PROTOPT_NONE                          /* flags*/
 };
 
@@ -189,7 +184,6 @@ const struct Curl_handler Curl_handler_rtmpts = {
   ZERO_NULL,                            /* connection_check */
   PORT_RTMPS,                           /* defport */
   CURLPROTO_RTMPTS,                     /* protocol */
-  CURLPROTO_RTMPT,                      /* family */
   PROTOPT_NONE                          /* flags*/
 };
 
@@ -205,13 +199,13 @@ static CURLcode rtmp_setup_connection(struct connectdata *conn)
     RTMP_Free(r);
     return CURLE_URL_MALFORMAT;
   }
-  conn->proto.rtmp = r;
+  conn->proto.generic = r;
   return CURLE_OK;
 }
 
 static CURLcode rtmp_connect(struct connectdata *conn, bool *done)
 {
-  RTMP *r = conn->proto.rtmp;
+  RTMP *r = conn->proto.generic;
   SET_RCVTIMEO(tv, 10);
 
   r->m_sb.sb_socket = (int)conn->sock[FIRSTSOCKET];
@@ -245,18 +239,17 @@ static CURLcode rtmp_connect(struct connectdata *conn, bool *done)
 
 static CURLcode rtmp_do(struct connectdata *conn, bool *done)
 {
-  struct Curl_easy *data = conn->data;
-  RTMP *r = conn->proto.rtmp;
+  RTMP *r = conn->proto.generic;
 
   if(!RTMP_ConnectStream(r, 0))
     return CURLE_FAILED_INIT;
 
   if(conn->data->set.upload) {
-    Curl_pgrsSetUploadSize(data, data->state.infilesize);
-    Curl_setup_transfer(data, -1, -1, FALSE, FIRSTSOCKET);
+    Curl_pgrsSetUploadSize(conn->data, conn->data->state.infilesize);
+    Curl_setup_transfer(conn, -1, -1, FALSE, NULL, FIRSTSOCKET, NULL);
   }
   else
-    Curl_setup_transfer(data, FIRSTSOCKET, -1, FALSE, -1);
+    Curl_setup_transfer(conn, FIRSTSOCKET, -1, FALSE, NULL, -1, NULL);
   *done = TRUE;
   return CURLE_OK;
 }
@@ -274,10 +267,10 @@ static CURLcode rtmp_done(struct connectdata *conn, CURLcode status,
 static CURLcode rtmp_disconnect(struct connectdata *conn,
                                 bool dead_connection)
 {
-  RTMP *r = conn->proto.rtmp;
+  RTMP *r = conn->proto.generic;
   (void)dead_connection;
   if(r) {
-    conn->proto.rtmp = NULL;
+    conn->proto.generic = NULL;
     RTMP_Close(r);
     RTMP_Free(r);
   }
@@ -287,7 +280,7 @@ static CURLcode rtmp_disconnect(struct connectdata *conn,
 static ssize_t rtmp_recv(struct connectdata *conn, int sockindex, char *buf,
                          size_t len, CURLcode *err)
 {
-  RTMP *r = conn->proto.rtmp;
+  RTMP *r = conn->proto.generic;
   ssize_t nread;
 
   (void)sockindex; /* unused */
@@ -308,7 +301,7 @@ static ssize_t rtmp_recv(struct connectdata *conn, int sockindex, char *buf,
 static ssize_t rtmp_send(struct connectdata *conn, int sockindex,
                          const void *buf, size_t len, CURLcode *err)
 {
-  RTMP *r = conn->proto.rtmp;
+  RTMP *r = conn->proto.generic;
   ssize_t num;
 
   (void)sockindex; /* unused */

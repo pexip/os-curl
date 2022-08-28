@@ -3,15 +3,13 @@
 <keywords>
 HTTP
 HTTP GET
-proxy
-haproxy
 IPv6
 </keywords>
 </info>
 #
 # Server-side
 <reply>
-<data nocheck="yes">
+<data nocheck=yes>
 HTTP/1.1 200 OK
 Date: Thu, 09 Nov 2010 14:49:00 GMT
 Server: test-server/fake
@@ -23,7 +21,7 @@ Connection: close
 Content-Type: text/html
 Funny-head: yesyes
 
-These data aren't actually sent to the client
+-foo-
 </data>
 </reply>
 
@@ -40,26 +38,20 @@ http-ipv6
 HTTP-IPv6 GET with PROXY protocol
  </name>
  <command>
--g "http://%HOST6IP:%HTTP6PORT/1456" --haproxy-protocol
+-g "http://%HOST6IP:%HTTP6PORT/1456" --local-port 44444 --haproxy-protocol
 </command>
-<features>
-proxy
-</features>
 </client>
 
 #
 # Verify data after the test has been "shot"
 <verify>
-# Strip off the (random) local port number. This test used to use a fixed
-# local port number that frequently causes the test to fail
-<strippart>
-s/PROXY TCP6 ::1 ::1 (\d+) (\d+)/PROXY TCP6 ::1 ::1 $2/
-</strippart>
+<strip>
+^User-Agent:
+</strip>
 <protocol>
-PROXY TCP6 ::1 ::1 %HTTP6PORT
+PROXY TCP6 ::1 ::1 44444 %HTTP6PORT
 GET /1456 HTTP/1.1
 Host: %HOST6IP:%HTTP6PORT
-User-Agent: curl/%VERSION
 Accept: */*
 
 </protocol>

@@ -67,5 +67,4 @@ http://%HOSTIP:%HTTPPORT/want/1156
 <errorcode>
 0
 </errorcode>
-</verify>
 </testcase>

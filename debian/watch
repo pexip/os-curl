@@ -1,2 +1,2 @@
-version=4
-https://curl.haxx.se/download/ download/curl-([\d\.]+).tar.gz
+version=3
+https://curl.haxx.se/download/curl-([\d\.]*).tar.gz

@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2020, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2018, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.se/docs/copyright.html.
+ * are also available at https://curl.haxx.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -40,7 +40,6 @@
 #include "tool_msgs.h"
 #include "tool_paramhlp.h"
 #include "tool_parsecfg.h"
-#include "tool_main.h"
 
 #include "memdebug.h" /* keep this as LAST include */
 
@@ -58,7 +57,7 @@
     if(!(*(str)))          \
       return PARAM_NO_MEM; \
   } \
-} while(0)
+} WHILE_FALSE
 
 struct LongShort {
   const char *letter; /* short name option */
@@ -178,8 +177,7 @@ static const struct LongShort aliases[]= {
   {"$H", "mail-auth",                ARG_STRING},
   {"$I", "post303",                  ARG_BOOL},
   {"$J", "metalink",                 ARG_BOOL},
-  {"$6", "sasl-authzid",             ARG_STRING},
-  {"$K", "sasl-ir",                  ARG_BOOL },
+  {"$K", "sasl-ir",                  ARG_BOOL},
   {"$L", "test-event",               ARG_BOOL},
   {"$M", "unix-socket",              ARG_FILENAME},
   {"$N", "path-as-is",               ARG_BOOL},
@@ -197,12 +195,10 @@ static const struct LongShort aliases[]= {
   {"$Y", "suppress-connect-headers", ARG_BOOL},
   {"$Z", "compressed-ssh",           ARG_BOOL},
   {"$~", "happy-eyeballs-timeout-ms", ARG_STRING},
-  {"$!", "retry-all-errors",         ARG_BOOL},
   {"0",   "http1.0",                 ARG_NONE},
   {"01",  "http1.1",                 ARG_NONE},
   {"02",  "http2",                   ARG_NONE},
   {"03",  "http2-prior-knowledge",   ARG_NONE},
-  {"04",  "http3",                   ARG_NONE},
   {"09",  "http0.9",                 ARG_BOOL},
   {"1",  "tlsv1",                    ARG_NONE},
   {"10",  "tlsv1.0",                 ARG_NONE},
@@ -218,8 +214,6 @@ static const struct LongShort aliases[]= {
   {"a",  "append",                   ARG_BOOL},
   {"A",  "user-agent",               ARG_STRING},
   {"b",  "cookie",                   ARG_STRING},
-  {"ba", "alt-svc",                  ARG_STRING},
-  {"bb", "hsts",                     ARG_STRING},
   {"B",  "use-ascii",                ARG_BOOL},
   {"c",  "cookie-jar",               ARG_STRING},
   {"C",  "continue-at",              ARG_STRING},
@@ -245,13 +239,12 @@ static const struct LongShort aliases[]= {
   {"El", "tlspassword",              ARG_STRING},
   {"Em", "tlsauthtype",              ARG_STRING},
   {"En", "ssl-allow-beast",          ARG_BOOL},
-  /* Eo */
+  {"Eo", "login-options",            ARG_STRING},
   {"Ep", "pinnedpubkey",             ARG_STRING},
   {"EP", "proxy-pinnedpubkey",       ARG_STRING},
   {"Eq", "cert-status",              ARG_BOOL},
   {"Er", "false-start",              ARG_BOOL},
   {"Es", "ssl-no-revoke",            ARG_BOOL},
-  {"ES", "ssl-revoke-best-effort",   ARG_BOOL},
   {"Et", "tcp-fastopen",             ARG_BOOL},
   {"Eu", "proxy-tlsuser",            ARG_STRING},
   {"Ev", "proxy-tlspassword",        ARG_STRING},
@@ -271,13 +264,9 @@ static const struct LongShort aliases[]= {
   {"E9", "proxy-tlsv1",              ARG_NONE},
   {"EA", "socks5-basic",             ARG_BOOL},
   {"EB", "socks5-gssapi",            ARG_BOOL},
-  {"EC", "etag-save",                ARG_FILENAME},
-  {"ED", "etag-compare",             ARG_FILENAME},
-  {"EE", "curves",                   ARG_STRING},
   {"f",  "fail",                     ARG_BOOL},
   {"fa", "fail-early",               ARG_BOOL},
   {"fb", "styled-output",            ARG_BOOL},
-  {"fc", "mail-rcpt-allowfails",     ARG_BOOL},
   {"F",  "form",                     ARG_STRING},
   {"Fs", "form-string",              ARG_STRING},
   {"g",  "globoff",                  ARG_BOOL},
@@ -305,7 +294,6 @@ static const struct LongShort aliases[]= {
   {"o",  "output",                   ARG_FILENAME},
   {"O",  "remote-name",              ARG_NONE},
   {"Oa", "remote-name-all",          ARG_BOOL},
-  {"Ob", "output-dir",               ARG_STRING},
   {"p",  "proxytunnel",              ARG_BOOL},
   {"P",  "ftp-port",                 ARG_STRING},
   {"q",  "disable",                  ARG_BOOL},
@@ -327,11 +315,7 @@ static const struct LongShort aliases[]= {
   {"Y",  "speed-limit",              ARG_STRING},
   {"y",  "speed-time",               ARG_STRING},
   {"z",  "time-cond",                ARG_STRING},
-  {"Z",  "parallel",                 ARG_BOOL},
-  {"Zb", "parallel-max",             ARG_STRING},
-  {"Zc", "parallel-immediate",       ARG_BOOL},
   {"#",  "progress-bar",             ARG_BOOL},
-  {"#m", "progress-meter",           ARG_BOOL},
   {":",  "next",                     ARG_NONE},
 };
 
@@ -427,7 +411,7 @@ void parse_cert_parameter(const char *cert_parameter,
       /* escaped colons and Windows drive letter colons were handled
        * above; if we're still here, this is a separating colon */
       param_place++;
-      if(*param_place) {
+      if(strlen(param_place) > 0) {
         *passphrase = strdup(param_place);
       }
       goto done;
@@ -530,13 +514,11 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
     const char *word = ('-' == flag[0]) ? flag + 2 : flag;
     size_t fnam = strlen(word);
     int numhits = 0;
-    bool noflagged = FALSE;
 
     if(!strncmp(word, "no-", 3)) {
       /* disable this option but ignore the "no-" part when looking for it */
       word += 3;
       toggle = FALSE;
-      noflagged = TRUE;
     }
 
     for(j = 0; j < sizeof(aliases)/sizeof(aliases[0]); j++) {
@@ -560,9 +542,6 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
     if(hit < 0) {
       return PARAM_OPTION_UNKNOWN;
     }
-    if(noflagged && (aliases[hit].desc != ARG_BOOL))
-      /* --no- prefixed an option that isn't boolean! */
-      return PARAM_NO_NOT_BOOLEAN;
   }
   else {
     flag++; /* prefixed with one dash, pass it */
@@ -698,8 +677,7 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
 
       case 'j': /* --compressed */
         if(toggle &&
-           !(curlinfo->features & (CURL_VERSION_LIBZ |
-                                   CURL_VERSION_BROTLI | CURL_VERSION_ZSTD)))
+           !(curlinfo->features & (CURL_VERSION_LIBZ | CURL_VERSION_BROTLI)))
           return PARAM_LIBCURL_DOESNT_SUPPORT;
         config->encoding = toggle;
         break;
@@ -817,7 +795,7 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
         break;
       case 'x': /* --krb */
         /* kerberos level string */
-        if(curlinfo->features & CURL_VERSION_SPNEGO)
+        if(curlinfo->features & CURL_VERSION_KERBEROS4)
           GetStr(&config->krblevel, nextarg);
         else
           return PARAM_LIBCURL_DOESNT_SUPPORT;
@@ -923,17 +901,14 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
         config->retry_connrefused = toggle;
         break;
       case 'h': /* --retry-delay */
-        err = str2unummax(&config->retry_delay, nextarg, LONG_MAX/1000);
+        err = str2unum(&config->retry_delay, nextarg);
         if(err)
           return err;
         break;
       case 'i': /* --retry-max-time */
-        err = str2unummax(&config->retry_maxtime, nextarg, LONG_MAX/1000);
+        err = str2unum(&config->retry_maxtime, nextarg);
         if(err)
           return err;
-        break;
-      case '!': /* --retry-all-errors */
-        config->retry_all_errors = toggle;
         break;
 
       case 'k': /* --proxy-negotiate */
@@ -970,7 +945,7 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
         if(*p) {
           /* if there's anything more than a plain decimal number */
           rc = sscanf(p, " - %6s", lrange);
-          *p = 0; /* null-terminate to make str2unum() work below */
+          *p = 0; /* zero terminate to make str2unum() work below */
         }
         else
           rc = 0;
@@ -1118,15 +1093,12 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
 #endif
           break;
         }
-      case '6': /* --sasl-authzid */
-        GetStr(&config->sasl_authzid, nextarg);
-        break;
       case 'K': /* --sasl-ir */
         config->sasl_ir = toggle;
         break;
       case 'L': /* --test-event */
 #ifdef CURLDEBUG
-        global->test_event_based = toggle;
+        config->test_event_based = toggle;
 #else
         warnf(global, "--test-event is ignored unless a debug build!\n");
 #endif
@@ -1186,16 +1158,11 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
         break;
       }
       break;
-    case '#':
-      switch(subletter) {
-      case 'm': /* --progress-meter */
-        global->noprogress = !toggle;
-        break;
-      default:  /* --progress-bar */
-        global->progressmode =
-          toggle ? CURL_PROGRESS_BAR : CURL_PROGRESS_STATS;
-        break;
-      }
+    case '#': /* --progress-bar */
+      if(toggle)
+        global->progressmode = CURL_PROGRESS_BAR;
+      else
+        global->progressmode = CURL_PROGRESS_STATS;
       break;
     case ':': /* --next */
       return PARAM_NEXT_OPERATION;
@@ -1213,16 +1180,9 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
         /* HTTP version 2.0 */
         config->httpversion = CURL_HTTP_VERSION_2_0;
         break;
-      case '3': /* --http2-prior-knowledge */
+      case '3':
         /* HTTP version 2.0 over clean TCP*/
         config->httpversion = CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE;
-        break;
-      case '4': /* --http3 */
-        /* HTTP version 3 go over QUIC - at once */
-        if(curlinfo->features & CURL_VERSION_HTTP3)
-          config->httpversion = CURL_HTTP_VERSION_3;
-        else
-          return PARAM_LIBCURL_DOESNT_SUPPORT;
         break;
       case '9':
         /* Allow HTTP/0.9 responses! */
@@ -1270,11 +1230,11 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
       break;
     case '4':
       /* IPv4 */
-      config->ip_version = CURL_IPRESOLVE_V4;
+      config->ip_version = 4;
       break;
     case '6':
       /* IPv6 */
-      config->ip_version = CURL_IPRESOLVE_V6;
+      config->ip_version = 6;
       break;
     case 'a':
       /* This makes the FTP sessions use APPE instead of STOR */
@@ -1284,32 +1244,17 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
       /* This specifies the User-Agent name */
       GetStr(&config->useragent, nextarg);
       break;
-    case 'b':
-      switch(subletter) {
-      case 'a': /* --alt-svc */
-        if(curlinfo->features & CURL_VERSION_ALTSVC)
-          GetStr(&config->altsvc, nextarg);
-        else
-          return PARAM_LIBCURL_DOESNT_SUPPORT;
-        break;
-      case 'b': /* --hsts */
-        if(curlinfo->features & CURL_VERSION_HSTS)
-          GetStr(&config->hsts, nextarg);
-        else
-          return PARAM_LIBCURL_DOESNT_SUPPORT;
-        break;
-      default:  /* --cookie string coming up: */
-        if(nextarg[0] == '@') {
-          nextarg++;
-        }
-        else if(strchr(nextarg, '=')) {
-          /* A cookie string must have a =-letter */
-          GetStr(&config->cookie, nextarg);
-          break;
-        }
-        /* We have a cookie file to read from! */
-        GetStr(&config->cookiefile, nextarg);
+    case 'b': /* cookie string coming up: */
+      if(nextarg[0] == '@') {
+        nextarg++;
       }
+      else if(strchr(nextarg, '=')) {
+        /* A cookie string must have a =-letter */
+        GetStr(&config->cookie, nextarg);
+        break;
+      }
+      /* We have a cookie file to read from! */
+      GetStr(&config->cookiefile, nextarg);
       break;
     case 'B':
       /* use ASCII/text when transferring */
@@ -1399,7 +1344,7 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
           size = 0;
         }
         else {
-          char *enc = curl_easy_escape(NULL, postdata, (int)size);
+          char *enc = curl_easy_escape(config->easy, postdata, (int)size);
           Curl_safefree(postdata); /* no matter if it worked or not */
           if(enc) {
             /* now make a string with the name from above and append the
@@ -1527,7 +1472,7 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
         /* Automatic referer requested, this may be combined with a
            set initial one */
         config->autoreferer = TRUE;
-        *ptr = 0; /* null-terminate here */
+        *ptr = 0; /* zero terminate here */
       }
       else
         config->autoreferer = FALSE;
@@ -1600,6 +1545,10 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
           config->ssl_allow_beast = toggle;
         break;
 
+      case 'o': /* --login-options */
+        GetStr(&config->login_options, nextarg);
+        break;
+
       case 'p': /* Pinned public key DER file */
         GetStr(&config->pinnedpubkey, nextarg);
         break;
@@ -1619,11 +1568,6 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
       case 's': /* --ssl-no-revoke */
         if(curlinfo->features & CURL_VERSION_SSL)
           config->ssl_no_revoke = TRUE;
-        break;
-
-      case 'S': /* --ssl-revoke-best-effort */
-        if(curlinfo->features & CURL_VERSION_SSL)
-          config->ssl_revoke_best_effort = TRUE;
         break;
 
       case 't': /* --tcp-fastopen */
@@ -1726,18 +1670,6 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
           config->socks5_auth &= ~CURLAUTH_GSSAPI;
         break;
 
-      case 'C':
-        GetStr(&config->etag_save_file, nextarg);
-        break;
-
-      case 'D':
-        GetStr(&config->etag_compare_file, nextarg);
-        break;
-
-      case 'E':
-        GetStr(&config->ssl_ec_curves, nextarg);
-        break;
-
       default: /* unknown flag */
         return PARAM_OPTION_UNKNOWN;
       }
@@ -1750,9 +1682,6 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
       case 'b': /* --styled-output */
         global->styled_output = toggle;
         break;
-      case 'c': /* --mail-rcpt-allowfails */
-        config->mail_rcpt_allowfails = toggle;
-        break;
       default: /* --fail (hard on errors)  */
         config->failonerror = toggle;
       }
@@ -1762,7 +1691,7 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
          to sort this out slowly and carefully */
       if(formparse(config,
                    nextarg,
-                   &config->mimeroot,
+                   &config->mimepost,
                    &config->mimecurrent,
                    (subletter == 's')?TRUE:FALSE)) /* 's' is literal string */
         return PARAM_BAD_USE;
@@ -1784,11 +1713,6 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
 
     case 'h': /* h for help */
       if(toggle) {
-        if(nextarg) {
-          global->help_category = strdup(nextarg);
-          if(!global->help_category)
-            return PARAM_NO_MEM;
-        }
         return PARAM_HELP_REQUESTED;
       }
       /* we now actually support --no-help too! */
@@ -1836,11 +1760,6 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
       }
       break;
     case 'i':
-      if(config->content_disposition) {
-        warnf(global,
-              "--include and --remote-header-name cannot be combined.\n");
-        return PARAM_BAD_USE;
-      }
       config->show_headers = toggle; /* show the headers as well in the
                                         general output stream */
       break;
@@ -1927,10 +1846,6 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
     case 'O': /* --remote-name */
       if(subletter == 'a') { /* --remote-name-all */
         config->default_node_flags = toggle?GETOUT_USEREMOTE:0;
-        break;
-      }
-      else if(subletter == 'b') { /* --output-dir */
-        GetStr(&config->output_dir, nextarg);
         break;
       }
       /* FALLTHROUGH */
@@ -2033,7 +1948,8 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
       }
       {
         /* byte range requested */
-        const char *tmp_range = nextarg;
+        char *tmp_range;
+        tmp_range = nextarg;
         while(*tmp_range != '\0') {
           if(!ISDIGIT(*tmp_range) && *tmp_range != '-' && *tmp_range != ',') {
             warnf(global, "Invalid character is found in given range. "
@@ -2199,24 +2115,6 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
       if(!config->low_speed_time)
         config->low_speed_time = 30;
       break;
-    case 'Z':
-      switch(subletter) {
-      case '\0':  /* --parallel */
-        global->parallel = toggle;
-        break;
-      case 'b':   /* --parallel-max */
-        err = str2unum(&global->parallel_max, nextarg);
-        if(err)
-          return err;
-        if((global->parallel_max > MAX_PARALLEL) ||
-           (global->parallel_max < 1))
-          global->parallel_max = PARALLEL_DEFAULT;
-        break;
-      case 'c':   /* --parallel-connect */
-        global->parallel_connect = toggle;
-        break;
-      }
-      break;
     case 'z': /* time condition coming up */
       switch(*nextarg) {
       case '+':
@@ -2266,54 +2164,54 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
   return PARAM_OK;
 }
 
-ParameterError parse_args(struct GlobalConfig *global, int argc,
+ParameterError parse_args(struct GlobalConfig *config, int argc,
                           argv_item_t argv[])
 {
   int i;
   bool stillflags;
   char *orig_opt = NULL;
   ParameterError result = PARAM_OK;
-  struct OperationConfig *config = global->first;
+  struct OperationConfig *operation = config->first;
 
   for(i = 1, stillflags = TRUE; i < argc && !result; i++) {
-    orig_opt = curlx_convert_tchar_to_UTF8(argv[i]);
+    orig_opt = argv[i];
 
-    if(stillflags && ('-' == orig_opt[0])) {
+    if(stillflags && ('-' == argv[i][0])) {
       bool passarg;
+      char *flag = argv[i];
 
-      if(!strcmp("--", orig_opt))
+      if(!strcmp("--", argv[i]))
         /* This indicates the end of the flags and thus enables the
            following (URL) argument to start with -. */
         stillflags = FALSE;
       else {
-        char *nextarg = (i < (argc - 1))
-          ? curlx_convert_tchar_to_UTF8(argv[i + 1])
-          : NULL;
+        char *nextarg = (i < (argc - 1)) ? argv[i + 1] : NULL;
 
-        result = getparameter(orig_opt, nextarg, &passarg, global, config);
-        curlx_unicodefree(nextarg);
-        config = global->last;
+        result = getparameter(flag, nextarg, &passarg, config, operation);
         if(result == PARAM_NEXT_OPERATION) {
           /* Reset result as PARAM_NEXT_OPERATION is only used here and not
              returned from this function */
           result = PARAM_OK;
 
-          if(config->url_list && config->url_list->url) {
+          if(operation->url_list && operation->url_list->url) {
             /* Allocate the next config */
-            config->next = malloc(sizeof(struct OperationConfig));
-            if(config->next) {
+            operation->next = malloc(sizeof(struct OperationConfig));
+            if(operation->next) {
               /* Initialise the newly created config */
-              config_init(config->next);
+              config_init(operation->next);
+
+              /* Copy the easy handle */
+              operation->next->easy = config->easy;
 
               /* Set the global config pointer */
-              config->next->global = global;
+              operation->next->global = config;
 
-              /* Update the last config pointer */
-              global->last = config->next;
+              /* Update the last operation pointer */
+              config->last = operation->next;
 
               /* Move onto the new config */
-              config->next->prev = config;
-              config = config->next;
+              operation->next->prev = operation;
+              operation = operation->next;
             }
             else
               result = PARAM_NO_MEM;
@@ -2327,12 +2225,9 @@ ParameterError parse_args(struct GlobalConfig *global, int argc,
       bool used;
 
       /* Just add the URL please */
-      result = getparameter("--url", orig_opt, &used, global,
-                            config);
+      result = getparameter((char *)"--url", argv[i], &used, config,
+                            operation);
     }
-
-    if(!result)
-      curlx_unicodefree(orig_opt);
   }
 
   if(result && result != PARAM_HELP_REQUESTED &&
@@ -2342,11 +2237,10 @@ ParameterError parse_args(struct GlobalConfig *global, int argc,
     const char *reason = param2text(result);
 
     if(orig_opt && strcmp(":", orig_opt))
-      helpf(global->errors, "option %s: %s\n", orig_opt, reason);
+      helpf(config->errors, "option %s: %s\n", orig_opt, reason);
     else
-      helpf(global->errors, "%s\n", reason);
+      helpf(config->errors, "%s\n", reason);
   }
 
-  curlx_unicodefree(orig_opt);
   return result;
 }
