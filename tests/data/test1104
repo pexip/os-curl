@@ -61,21 +61,23 @@ HTTP cookie expiry date at Jan 1 00:00:00 GMT 1970
  <command>
 http://%HOSTIP:%HTTPPORT/want/1104 -L -x %HOSTIP:%HTTPPORT -c log/cookies1104.jar
 </command>
+<features>
+proxy
+</features>
 </client>
 
 # Verify data after the test has been "shot"
 <verify>
-<strip>
-^User-Agent:.*
-</strip>
 <protocol>
 GET http://%HOSTIP:%HTTPPORT/want/1104 HTTP/1.1
 Host: %HOSTIP:%HTTPPORT
+User-Agent: curl/%VERSION
 Accept: */*
 Proxy-Connection: Keep-Alive
 
 GET http://%HOSTIP:%HTTPPORT/want/data/11040002 HTTP/1.1
 Host: %HOSTIP:%HTTPPORT
+User-Agent: curl/%VERSION
 Accept: */*
 Proxy-Connection: Keep-Alive
 Cookie: test2=true
