@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2020, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2022, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -18,6 +18,8 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
+ * SPDX-License-Identifier: curl
+ *
  ***************************************************************************/
 /* <DESC>
  * Upload to SFTP, resuming a previously aborted transfer.
@@ -29,7 +31,7 @@
 #include <curl/curl.h>
 
 /* read data to upload */
-static size_t readfunc(void *ptr, size_t size, size_t nmemb, void *stream)
+static size_t readfunc(char *ptr, size_t size, size_t nmemb, void *stream)
 {
   FILE *f = (FILE *)stream;
   size_t n;
@@ -66,7 +68,7 @@ static curl_off_t sftpGetRemoteFileSize(const char *i_remoteFile)
                                &remoteFileSizeByte);
     if(result)
       return -1;
-    printf("filesize: %" CURL_FORMAT_CURL_OFF_T "\n", remoteFileSizeByte);
+    printf("filesize: %lu\n", (unsigned long)remoteFileSizeByte);
   }
   curl_easy_cleanup(curlHandlePtr);
 

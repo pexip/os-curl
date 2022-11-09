@@ -5,7 +5,7 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2020, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2022, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
@@ -18,13 +18,23 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
+ * SPDX-License-Identifier: curl
+ *
  ***************************************************************************/
 #include "tool_setup.h"
 
 #include <sys/stat.h>
 
+#ifdef WIN32
+#include <tchar.h>
+#endif
+
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
+#endif
+
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
 #endif
 
 #ifdef USE_NSS
@@ -37,7 +47,6 @@
 #include "curlx.h"
 
 #include "tool_cfgable.h"
-#include "tool_convert.h"
 #include "tool_doswin.h"
 #include "tool_msgs.h"
 #include "tool_operate.h"
@@ -75,29 +84,30 @@ int _CRT_glob = 0;
 /* if we build a static library for unit tests, there is no main() function */
 #ifndef UNITTESTS
 
+#if defined(HAVE_PIPE) && defined(HAVE_FCNTL)
 /*
  * Ensure that file descriptors 0, 1 and 2 (stdin, stdout, stderr) are
  * open before starting to run.  Otherwise, the first three network
  * sockets opened by curl could be used for input sources, downloaded data
  * or error logs as they will effectively be stdin, stdout and/or stderr.
+ *
+ * fcntl's F_GETFD instruction returns -1 if the file descriptor is closed,
+ * otherwise it returns "the file descriptor flags (which typically can only
+ * be FD_CLOEXEC, which is not set here).
  */
-static void main_checkfds(void)
+static int main_checkfds(void)
 {
-#ifdef HAVE_PIPE
-  int fd[2] = { STDIN_FILENO, STDIN_FILENO };
-  while(fd[0] == STDIN_FILENO ||
-        fd[0] == STDOUT_FILENO ||
-        fd[0] == STDERR_FILENO ||
-        fd[1] == STDIN_FILENO ||
-        fd[1] == STDOUT_FILENO ||
-        fd[1] == STDERR_FILENO)
-    if(pipe(fd) < 0)
-      return;   /* Out of handles. This isn't really a big problem now, but
-                   will be when we try to create a socket later. */
-  close(fd[0]);
-  close(fd[1]);
-#endif
+  int fd[2];
+  while((fcntl(STDIN_FILENO, F_GETFD) == -1) ||
+        (fcntl(STDOUT_FILENO, F_GETFD) == -1) ||
+        (fcntl(STDERR_FILENO, F_GETFD) == -1))
+    if(pipe(fd))
+      return 1;
+  return 0;
 }
+#else
+#define main_checkfds() 0
+#endif
 
 #ifdef CURLDEBUG
 static void memory_tracking_init(void)
@@ -114,7 +124,7 @@ static void memory_tracking_init(void)
     curl_free(env);
     curl_dbg_memdebug(fname);
     /* this weird stuff here is to make curl_free() get called before
-       curl_gdb_memdebug() as otherwise memory tracking will log a free()
+       curl_dbg_memdebug() as otherwise memory tracking will log a free()
        without an alloc! */
   }
   /* if CURL_MEMLIMIT is set, this enables fail-on-alloc-number-N feature */
@@ -207,11 +217,9 @@ static void main_free(struct GlobalConfig *config)
   /* Cleanup the easy handle */
   /* Main cleanup */
   curl_global_cleanup();
-  convert_cleanup();
-  metalink_cleanup();
 #ifdef USE_NSS
   if(PR_Initialized()) {
-    /* prevent valgrind from reporting still reachable mem from NSRP arenas */
+    /* prevent valgrind from reporting still reachable mem from NSPR arenas */
     PL_ArenaFinish();
     /* prevent valgrind from reporting possibly lost memory (fd cache, ...) */
     PR_Cleanup();
@@ -223,51 +231,6 @@ static void main_free(struct GlobalConfig *config)
   config_free(config->last);
   config->first = NULL;
   config->last = NULL;
-}
-
-#ifdef WIN32
-/* TerminalSettings for Windows */
-static struct TerminalSettings {
-  HANDLE hStdOut;
-  DWORD dwOutputMode;
-} TerminalSettings;
-
-static void configure_terminal(void)
-{
-  /*
-   * If we're running Windows, enable VT output.
-   * Note: VT mode flag can be set on any version of Windows, but VT
-   * processing only performed on Win10 >= Creators Update)
-   */
-
-  /* Define the VT flags in case we're building with an older SDK */
-#ifndef ENABLE_VIRTUAL_TERMINAL_PROCESSING
-    #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
-#endif
-
-  memset(&TerminalSettings, 0, sizeof(TerminalSettings));
-
-  /* Enable VT output */
-  TerminalSettings.hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
-  if((TerminalSettings.hStdOut != INVALID_HANDLE_VALUE)
-    && (GetConsoleMode(TerminalSettings.hStdOut,
-                       &TerminalSettings.dwOutputMode))) {
-    SetConsoleMode(TerminalSettings.hStdOut,
-                   TerminalSettings.dwOutputMode
-                   | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
-  }
-}
-#else
-#define configure_terminal()
-#endif
-
-static void restore_terminal(void)
-{
-#ifdef WIN32
-  /* Restore Console output mode and codepage to whatever they were
-   * when Curl started */
-  SetConsoleMode(TerminalSettings.hStdOut, TerminalSettings.dwOutputMode);
-#endif
 }
 
 /*
@@ -284,7 +247,6 @@ int main(int argc, char *argv[])
   memset(&global, 0, sizeof(global));
 
 #ifdef WIN32
-#ifdef _tcscmp
   /* Undocumented diagnostic option to list the full paths of all loaded
      modules. This is purposely pre-init. */
   if(argc == 2 && !_tcscmp(argv[1], _T("--dump-module-paths"))) {
@@ -294,7 +256,6 @@ int main(int argc, char *argv[])
     curl_slist_free_all(head);
     return head ? 0 : 1;
   }
-#endif /* _tcscmp */
   /* win32_init must be called before other init routines. */
   result = win32_init();
   if(result) {
@@ -303,10 +264,10 @@ int main(int argc, char *argv[])
   }
 #endif
 
-  /* Perform any platform-specific terminal configuration */
-  configure_terminal();
-
-  main_checkfds();
+  if(main_checkfds()) {
+    fprintf(stderr, "curl: out of file descriptors\n");
+    return CURLE_FAILED_INIT;
+  }
 
 #if defined(HAVE_SIGNAL) && defined(SIGPIPE)
   (void)signal(SIGPIPE, SIG_IGN);
@@ -326,11 +287,13 @@ int main(int argc, char *argv[])
     main_free(&global);
   }
 
-  /* Return the terminal to its original state */
-  restore_terminal();
+#ifdef WIN32
+  /* Flush buffers of all streams opened in write or update mode */
+  fflush(NULL);
+#endif
 
 #ifdef __NOVELL_LIBC__
-  if(getenv("_IN_NETWARE_BASH_") == NULL)
+  if(!getenv("_IN_NETWARE_BASH_"))
     tool_pressanykey();
 #endif
 

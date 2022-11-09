@@ -6,7 +6,7 @@
 #                            | (__| |_| |  _ <| |___
 #                             \___|\___/|_| \_\_____|
 #
-# Copyright (C) 2010-2020, Daniel Stenberg, <daniel@haxx.se>, et al.
+# Copyright (C) 2010-2022, Daniel Stenberg, <daniel@haxx.se>, et al.
 #
 # This software is licensed as described in the file COPYING, which
 # you should have received as part of this distribution. The terms
@@ -19,10 +19,12 @@
 # This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
 # KIND, either express or implied.
 #
+# SPDX-License-Identifier: curl
+#
 ###########################################################################
 #
 # This script grew out of help from Przemyslaw Iskra and Balint Szilakszi
-# a late evening in the #curl IRC channel on freenode.
+# a late evening in the #curl IRC channel.
 #
 
 use strict;
@@ -45,6 +47,14 @@ if (!$rc) {
     $Cpreprocessor = 'cpp';
 }
 
+my $verbose=0;
+
+# verbose mode when -v is the first argument
+if($ARGV[0] eq "-v") {
+    $verbose=1;
+    shift;
+}
+
 # we may get the dir root pointed out
 my $root=$ARGV[0] || ".";
 
@@ -53,7 +63,6 @@ my $i = ($ARGV[1]) ? "-I$ARGV[1] " : '';
 
 my $incdir = "$root/include/curl";
 
-my $verbose=0;
 my $summary=0;
 my $misses=0;
 
@@ -67,6 +76,7 @@ sub scanenums {
 
     open H_IN, "-|", "$Cpreprocessor $i$file" || die "Cannot preprocess $file";
     while ( <H_IN> ) {
+        my ($line, $linenum) = ($_, $.);
         if( /^#(line|) (\d+) \"(.*)\"/) {
             # if the included file isn't in our incdir, then we skip this section
             # until next #line
@@ -82,6 +92,9 @@ sub scanenums {
         if($skipit) {
             next;
         }
+        if (/^#/) {
+            next;
+        }
         if ( /enum\s+(\S+\s+)?{/ .. /}/ ) {
             s/^\s+//;
             chomp;
@@ -90,6 +103,11 @@ sub scanenums {
                ($_ ne "typedef") &&
                ($_ ne "enum") &&
                ($_ !~ /^[ \t]*$/)) {
+                if($verbose) {
+                    print "Source: $Cpreprocessor $i$file\n";
+                    print "Symbol: $_\n";
+                    print "Line #$linenum: $line\n\n";
+                }
                 push @syms, $_;
             }
         }
@@ -102,7 +120,13 @@ sub scanheader {
     scanenums($f);
     open H, "<$f";
     while(<H>) {
+        my ($line, $linenum) = ($_, $.);
         if (/^#define +([^ \n]*)/) {
+            if($verbose) {
+                print "Source: $f\n";
+                print "Symbol: $1\n";
+                print "Line #$linenum: $line\n\n";
+            }
             push @syms, $1;
         }
     }
@@ -110,7 +134,7 @@ sub scanheader {
 }
 
 
-opendir(my $dh, $incdir) || die "Can't opendir: $!";
+opendir(my $dh, $incdir) || die "Can't opendir $incdir: $!";
 my @hfiles = grep { /\.h$/ } readdir($dh);
 closedir $dh;
 
