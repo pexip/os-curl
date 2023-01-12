@@ -1,0 +1,4 @@
+builds/
+winbuild/CURL_OBJS.inc
+winbuild/LIBCURL_OBJS.inc
+winbuild/vc140.idb
