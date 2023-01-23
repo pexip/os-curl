@@ -1,13 +1,7 @@
 #! /usr/bin/make -f
 
-# this will avoid unneded dependencies
-export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
-
-# this will catch miss-linking. (e.g. undefined symbols)
-#export DEB_LDFLAGS_MAINT_APPEND = -Wl,-z,defs
-
 # enable all hardening options (see #763372)
-export DEB_BUILD_MAINT_OPTIONS := hardening=+all
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
 DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
@@ -22,6 +16,8 @@ CONFIGURE_ARGS = -- --disable-dependency-tracking		\
 # disable libssh2 on Ubuntu (see #888449)
 ifeq ($(shell dpkg-vendor --derives-from Ubuntu && echo yes),yes)
 	CONFIGURE_ARGS += --without-libssh2 --without-libssh
+else
+	CONFIGURE_ARGS += --without-libssh --without-libssh2
 endif
 
 %:
@@ -44,13 +40,12 @@ override_dh_auto_configure:
 	for flavour in build build-gnutls; do \
 		(cd debian/$$flavour && ./buildconf && cp ../../ltmain.sh .) \
 	done
-	cd debian/build && dh_auto_configure ${CONFIGURE_ARGS}		\
+	cd debian/build && dh_auto_configure ${CONFIGURE_ARGS} --with-openssl \
 		--with-ca-path=/etc/ssl/certs \
 		--with-ca-bundle=/etc/ssl/certs/ca-certificates.crt \
 		--without-librtmp --without-libssh2
-	cd debian/build-gnutls &&  dh_auto_configure ${CONFIGURE_ARGS}	\
+	cd debian/build-gnutls && dh_auto_configure ${CONFIGURE_ARGS} --with-gnutls \
 		--with-ca-path=/etc/ssl/certs				\
-		--without-ssl --with-gnutls				\
 		--without-librtmp --without-libssh2
 
 override_dh_auto_build:
@@ -58,8 +53,10 @@ override_dh_auto_build:
 	cd debian/build-gnutls && dh_auto_build
 
 override_dh_auto_test:
+ifeq ($(filter nocheck,$(DEB_BUILD_PROFILES)),)
 	-cd debian/build && dh_auto_test
 	-cd debian/build-gnutls && dh_auto_test
+endif
 
 override_dh_install:
 	${MAKE} -C debian/build					\
@@ -97,6 +94,12 @@ override_dh_install:
 	    -e "/-fdebug-prefix-map=/s|\(-fdebug-prefix-map=\)/[^ ]*=.||" \
 	    -e "/-ffile-prefix-map=/s|\(-ffile-prefix-map=\)/[^ ]*=.||" \
 	    -i `find . -name curl-config`
+# When we get here, everything has been properly installed.  Because
+# of debhelper-compat 13, we have to remove some files that are
+# otherwise flagged as not installed and will cause the build to fail.
+	rm -rfv debian/tmp/usr/share/man/* \
+		debian/tmp/usr/share/fish/* \
+		debian/tmp/usr/share/aclocal/*
 
 override_dh_installchangelogs:
 	dh_installchangelogs CHANGES
