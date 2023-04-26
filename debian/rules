@@ -25,29 +25,30 @@ endif
 	dh $@
 
 override_dh_auto_configure:
-	mkdir -p debian/build debian/build-gnutls
-	# pop the last patch (nss)
+	mkdir -p debian/build
+	mkdir -p debian/build-gnutls
+# pop the last patch (nss)
 	quilt pop
-	# pop the second last patch (gnutls)
+# pop the second last patch (gnutls)
 	quilt pop
-	# get the source without nss and gnutls patches
+# get the source without nss and gnutls patches
 	tar -cf - --exclude=debian/build* --exclude=.pc . \
 		| tar -xf - -C debian/build
-	# push the second last patch which must be gnutls
+# push the second last patch which must be gnutls
 	quilt push
-	# get the source with gnutls patch applied
+# get the source with gnutls patch applied
 	tar -cf - --exclude=debian/build* --exclude=.pc . \
 		| tar -xf - -C debian/build-gnutls
 	for flavour in build build-gnutls; do \
 		(cd debian/$$flavour && ./buildconf && cp ../../ltmain.sh .) \
 	done
-	cd debian/build && dh_auto_configure ${CONFIGURE_ARGS} --with-openssl \
+	cd debian/build && \
+	dh_auto_configure ${CONFIGURE_ARGS} --with-openssl \
 		--with-ca-path=/etc/ssl/certs \
-		--with-ca-bundle=/etc/ssl/certs/ca-certificates.crt \
-		--without-librtmp --without-libssh2
-	cd debian/build-gnutls && dh_auto_configure ${CONFIGURE_ARGS} --with-gnutls \
-		--with-ca-path=/etc/ssl/certs				\
-		--without-librtmp --without-libssh2
+		--with-ca-bundle=/etc/ssl/certs/ca-certificates.crt
+	cd debian/build-gnutls && \
+	dh_auto_configure ${CONFIGURE_ARGS} --with-gnutls \
+		--with-ca-path=/etc/ssl/certs
 
 override_dh_auto_build:
 	cd debian/build && dh_auto_build
