@@ -1,3 +1,9 @@
+curl (7.88.1-9pexip1) pexip; urgency=medium
+
+  * New upstream release
+
+ -- Huw Jones <huw@pexip.com>  Wed, 26 Apr 2023 12:19:41 +0100
+
 curl (7.88.1-9) unstable; urgency=medium
 
   [ Sergio Durigan Junior ]
