@@ -1,3 +1,9 @@
+curl (7.88.1-10+deb12u1pexip3) pexip; urgency=medium
+
+  * Backport upstream patch to limit HTTP header storage. CVE-2023-38039.
+
+ -- Steve McIntyre <steve.mcintyre@pexip.com>  Tue, 26 Sep 2023 16:42:22 +0100
+
 curl (7.88.1-10+deb12u1pexip2) pexip; urgency=medium
 
   * Tweak Debian patch to disable checksrc errors for lines being too
