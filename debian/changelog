@@ -1,3 +1,9 @@
+curl (7.88.1-10+deb12u4pexip2) pexip-bookworm; urgency=medium
+
+  * Initial bookworm build
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Thu, 16 Nov 2023 09:57:05 +0000
+
 curl (7.88.1-10+deb12u4pexip1) pexip; urgency=medium
 
   * New upstream release
