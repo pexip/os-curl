@@ -1,5 +1,8 @@
 #! /usr/bin/make -f
 
+# Include pkg-info to make use of DEB_VERSION
+include /usr/share/dpkg/pkg-info.mk
+
 # enable all hardening options (see #763372)
 export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 
@@ -19,6 +22,25 @@ ifeq ($(shell dpkg-vendor --derives-from Ubuntu && echo yes),yes)
 	CONFIGURE_ARGS += --without-libssh2 --without-libssh
 else
 	CONFIGURE_ARGS += --without-libssh --without-libssh2
+endif
+
+
+ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+  NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+  MAKEFLAGS += -j$(NUMJOBS)
+endif
+
+export DEB_CFLAGS_MAINT_APPEND = -D_DEB_HOST_ARCH=\"$(DEB_HOST_MULTIARCH)\" -DCURL_PATCHSTAMP=\"$(DEB_VERSION)\"
+export DEB_CXXFLAGS_MAINT_APPEND = -D_DEB_HOST_ARCH=\"$(DEB_HOST_MULTIARCH)\" -DCURL_PATCHSTAMP=\"$(DEB_VERSION)\"
+
+ifneq ($(filter pkg.curl.openssl-only,$(DEB_BUILD_PROFILES)),)
+	DEB_BUILD_PROFILES += pkg.curl.no-gnutls pkg.curl.no-nss
+endif
+ifneq ($(filter pkg.curl.gnutls-only,$(DEB_BUILD_PROFILES)),)
+	DEB_BUILD_PROFILES += pkg.curl.no-openssl pkg.curl.no-nss
+endif
+ifneq ($(filter pkg.curl.nss-only,$(DEB_BUILD_PROFILES)),)
+	DEB_BUILD_PROFILES += pkg.curl.no-openssl pkg.curl.no-gnutls
 endif
 
 %:
