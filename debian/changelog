@@ -1,3 +1,9 @@
+curl (7.88.1-10+deb12u5+pexip24u3) pexip-bookworm; urgency=medium
+
+  * New versioning scheme
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Thu, 01 Feb 2024 15:54:49 +0000
+
 curl (7.88.1-10+deb12u5pexip2) pexip-bookworm; urgency=medium
 
   * Pull latest update into bookworm branch
