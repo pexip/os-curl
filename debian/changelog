@@ -1,3 +1,9 @@
+curl (7.88.1-10+deb12u6+pexip24u1) pexip; urgency=medium
+
+  * New upstream release
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Mon, 01 Jul 2024 08:42:04 +0000
+
 curl (7.88.1-10+deb12u6) bookworm; urgency=medium
 
   * Team upload.
