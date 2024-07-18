@@ -48,3 +48,6 @@ CVE-2024-2398.patch
 # Used to generate packages for the other crypto libraries.
 90_gnutls.patch
 99_nss.patch
+
+# Pexip patches
+pexip-fix-socket-already-connected-handling.patch

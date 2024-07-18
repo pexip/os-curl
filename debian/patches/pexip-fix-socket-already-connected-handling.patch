@@ -1,0 +1,23 @@
+Description: Patch cf-socket to honor CURL_SOCKOPT_ALREADY_CONNECTED returned from the CURLOPT_SOCKOPTFUNCTION callback during socket setup. [https://github.com/bch/curl/commit/603c4c526c3c7267ba483278173e1dbb20a52baa]
+Origin: Pexip
+Forwarded: not-needed
+Author: Knut Saastad <knut.saastad@pexip.com>
+Last-Update: 2024-07-17
+
+Index: curl/lib/cf-socket.c
+===================================================================
+--- curl.orig/lib/cf-socket.c
++++ curl/lib/cf-socket.c
+@@ -1084,6 +1084,11 @@ static CURLcode cf_tcp_connect(struct Curl_cfilter *cf,
+     if(result)
+       goto out;
+ 
++    if(cf->connected) {
++      *done = TRUE;
++      return CURLE_OK;
++    }
++
+     /* Connect TCP socket */
+     rc = do_connect(cf, data, cf->conn->bits.tcp_fastopen);
+     if(-1 == rc) {
+

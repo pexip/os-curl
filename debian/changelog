@@ -1,3 +1,9 @@
+curl (7.88.1-10+deb12u6+pexip24u2) pexip; urgency=medium
+
+  * Add pexip-fix-socket-already-connected-handling.patch
+
+ -- Knut Saastad <knut.saastad@pexip.com>  Thu, 18 Jul 2024 11:33:00 +0000
+
 curl (7.88.1-10+deb12u6+pexip24u1) pexip; urgency=medium
 
   * New upstream release
