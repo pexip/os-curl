@@ -1,3 +1,9 @@
+curl (7.88.1-10+deb12u6+pexip24u3) pexip; urgency=medium
+
+  * Shuffle patches to work around upstream patching mess.
+
+ -- Steve McIntyre <steve.mcintyre@pexip.com>  Wed, 31 Jul 2024 11:33:07 +0100
+
 curl (7.88.1-10+deb12u6+pexip24u2) pexip; urgency=medium
 
   * Add pexip-fix-socket-already-connected-handling.patch

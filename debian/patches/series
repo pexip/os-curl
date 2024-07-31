@@ -44,10 +44,11 @@ CVE-2023-46219.patch
 CVE-2024-2004.patch
 CVE-2024-2398.patch
 
+# Pexip patches
+pexip-fix-socket-already-connected-handling.patch
+
 # Do not add patches below.
 # Used to generate packages for the other crypto libraries.
 90_gnutls.patch
 99_nss.patch
 
-# Pexip patches
-pexip-fix-socket-already-connected-handling.patch
