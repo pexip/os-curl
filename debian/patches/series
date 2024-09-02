@@ -44,6 +44,10 @@ CVE-2023-46219.patch
 CVE-2024-2004.patch
 CVE-2024-2398.patch
 
+# Patches from 8.9.1.
+CVE-2024-7264-0.patch
+CVE-2024-7264-1.patch
+
 # Pexip patches
 pexip-fix-socket-already-connected-handling.patch
 
