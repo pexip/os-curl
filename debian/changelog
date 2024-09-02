@@ -2,7 +2,7 @@ curl (7.88.1-10+deb12u7+pexip24u1) pexip; urgency=medium
 
   * New upstream release with security fix
 
- -- Steve McIntyre <steve.mcintyre@pexip.com>  Mon, 03 Sep 2024 17:47:3 +0100
+ -- Steve McIntyre <steve.mcintyre@pexip.com>  Mon, 03 Sep 2024 17:47:30 +0100
 
 curl (7.88.1-10+deb12u7) bookworm; urgency=medium
 
