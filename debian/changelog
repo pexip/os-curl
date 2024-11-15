@@ -1,3 +1,9 @@
+curl (7.88.1-10+deb12u8+pexip24u2) pexip; urgency=medium
+
+  * No-change rebuild to pick up our libssl3
+
+ -- Steve McIntyre <steve.mcintyre@pexip.com>  Fri, 14 Nov 2024 12:35:41 +0000
+
 curl (7.88.1-10+deb12u8+pexip24u1) pexip; urgency=medium
 
   * New upstream release with security fix.
