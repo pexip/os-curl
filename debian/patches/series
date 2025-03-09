@@ -8,6 +8,8 @@ Use-correct-path-when-loading-libnss-pem-ckbi-.so.patch
 
 fix-unix-domain-socket.patch
 openldap-create-ldap-URLs-correctly-for-IPv6-addresses.patch
+large-time-testable-feature.patch
+dont-stop-stunnel-before-retry.patch
 
 # CVE fixes.
 # Patches from 8.0.1.
@@ -50,6 +52,18 @@ CVE-2024-7264-1.patch
 
 # Patches from 8.10.0.
 CVE-2024-8096.patch
+
+# Patches from 8.11.0.
+CVE-2024-9681-0.patch
+CVE-2024-9681-1.patch
+url-use-same-credentials-on-redirect.patch
+CVE-2024-11053.patch
+
+# Patches from 8.12.0.
+CVE-2025-0167.patch
+
+# Fix test issues with port clashes, now each build has a different random seed.
+runtests.pl-Increase-variance-of-random-seed-used-for-tes.patch
 
 # Do not add patches below.
 # Used to generate packages for the other crypto libraries.
