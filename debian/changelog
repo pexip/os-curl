@@ -1,3 +1,9 @@
+curl (7.88.1-10+deb12u12+pexip24u1) pexip; urgency=medium
+
+  * New upstream release
+
+ -- Huw Jones <huw@pexip.com>  Mon, 17 Mar 2025 12:05:49 +0000
+
 curl (7.88.1-10+deb12u12) bookworm; urgency=medium
 
   * d/p/runtests.pl-Increase-variance-of-random-seed-used-for-tes: Fix test
