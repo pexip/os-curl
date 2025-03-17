@@ -1,3 +1,57 @@
+curl (7.88.1-10+deb12u12) bookworm; urgency=medium
+
+  * d/p/runtests.pl-Increase-variance-of-random-seed-used-for-tes: Fix test
+    failures due to port clashes
+
+ -- Samuel Henrique <samueloph@debian.org>  Sun, 09 Mar 2025 10:45:45 +0000
+
+curl (7.88.1-10+deb12u11) bookworm; urgency=medium
+
+  * Team upload.
+  * Import patch for CVE-2025-0167.
+   - When asked to use a `.netrc` file for credentials **and** to follow HTTP
+     redirects, curl could leak the password used for the first host to the
+     followed-to host under certain circumstances. This flaw only manifests
+     itself if the netrc file has a `default` entry that omits both login
+     and password. A rare circumstance.
+
+ -- Dr. Tobias Quathamer <toddy@debian.org>  Mon, 10 Feb 2025 11:45:37 +0100
+
+curl (7.88.1-10+deb12u10) bookworm; urgency=medium
+
+  * Team upload.
+  * Import patch for CVE-2024-11053
+    - When asked to both use a `.netrc` file for credentials and to follow HTTP
+      redirects, curl could leak the password used for the first host to the
+      followed-to host under certain circumstances.
+  * d/patches:
+    - url-use-same-credentials-on-redirect.patch: Backport upstream patch to
+      fix the issue of reusing closed connections when the server disconnects
+      unexpectedly, and ensure redirects keep both username and password.
+      This patch is required for CVE-2024-11053.
+    - CVE-2024-11053.patch: Import and backport upstream patch to
+      fix CVE-2024-11053
+
+ -- Matheus Polkorny <mpolkorny@gmail.com>  Sun, 19 Jan 2025 23:22:01 -0300
+
+curl (7.88.1-10+deb12u9) bookworm; urgency=medium
+
+  * Team upload.
+  * Import patches for CVE-2024-9681
+    - A vulnerability in curl's HSTS handling allows a subdomain’s expiry time
+      to overwrite its parent domain’s cache entry. This can lead to unintended
+      HTTPS upgrades or premature reversion to HTTP when both subdomains and
+      parent domains are used. Affects applications with HSTS enabled,
+      potentially disrupting access when a domain stops supporting HTTPS.
+  * d/patches:
+    - CVE-2024-9681-*.patch: Backport patches.
+    - CVE-2024-9681-1: fix backport inconsistencies
+    - large-time-testable-feature.patch: Import 'large-time' feature for tests
+    - dont-stop-stunnel-before-retry.patch: Import patch to avoid stopping
+      stunnel before retrying
+
+ -- Aquila Macedo Costa <aquilamacedo@riseup.net>  Thu, 02 Jan 2025 21:11:56 -0300
+
 curl (7.88.1-10+deb12u8+pexip24u2) pexip; urgency=medium
 
   * No-change rebuild to pick up our libssl3
