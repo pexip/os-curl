@@ -1,144 +1,541 @@
-curl (7.88.1-10+deb12u12) bookworm; urgency=medium
+curl (8.13.0-1) unstable; urgency=medium
 
-  * d/p/runtests.pl-Increase-variance-of-random-seed-used-for-tes: Fix test
-    failures due to port clashes
+  * New upstream version 8.13.0
+  * Update Standards-Version to 4.7.2
+  * Ship shell completions on crossbuilds. Upstream changed the way they are
+    generated and it doesn't need to call the compiled binary anymore.
+  * d/copyright: Drop removed files genroot.sh and genserv.sh  
+  * d/watch: Point to GitHub for GA releases
 
- -- Samuel Henrique <samueloph@debian.org>  Sun, 09 Mar 2025 10:45:45 +0000
+ -- Samuel Henrique <samueloph@debian.org>  Wed, 02 Apr 2025 09:12:40 +0100
 
-curl (7.88.1-10+deb12u11) bookworm; urgency=medium
+curl (8.13.0~rc3-1) unstable; urgency=medium
+
+  * New upstream version 8.13.0~rc3
+  * d/p/runtests-feat-filter.patch: Drop patch, merged upstream
+  * d/watch: Properly identify RC release IDs (rc1, rc2...)
+
+  [ Vladimir Petko ]
+  * Revert Ubuntu compatibility changes for building with libssh
+    (closes: #1079076)
+
+ -- Samuel Henrique <samueloph@debian.org>  Wed, 26 Mar 2025 18:37:55 +0000
+
+curl (8.13.0~rc2-2) unstable; urgency=medium
 
   * Team upload.
-  * Import patch for CVE-2025-0167.
-   - When asked to use a `.netrc` file for credentials **and** to follow HTTP
-     redirects, curl could leak the password used for the first host to the
-     followed-to host under certain circumstances. This flaw only manifests
-     itself if the netrc file has a `default` entry that omits both login
-     and password. A rare circumstance.
+  * d/p/runtests-feat-filter.patch: Import upstream patch for feature-based
+    test filtering
+  * d/rules:
+    - Add pkg.curl.debug profile support
+    - Add 'feat:debug' as option to the TESTS_GENERAL_PARAMETERS in debug
+      profile
+  * d/tests:
+    - Add new autopkgtests for event-based tests
+    - Redirect specific autopkgtest outputs to artifacts to reduce build log
+      noise
+    - Reduce override_dh_auto_test verbosity in the event-based autopkgtests
 
- -- Dr. Tobias Quathamer <toddy@debian.org>  Mon, 10 Feb 2025 11:45:37 +0100
+ -- Aquila Macedo Costa <aquilamacedo@riseup.net>  Mon, 17 Mar 2025 21:04:08 -0300
 
-curl (7.88.1-10+deb12u10) bookworm; urgency=medium
+curl (8.13.0~rc2-1) unstable; urgency=medium
 
-  * Team upload.
-  * Import patch for CVE-2024-11053
-    - When asked to both use a `.netrc` file for credentials and to follow HTTP
-      redirects, curl could leak the password used for the first host to the
-      followed-to host under certain circumstances.
+  * New upstream version 8.13.0~rc2
+    - gnutls: fix use of pkcs11 urls for keys/certs (closes: #1077060)
+    - gnutls: set priority via --ciphers (closes: #1095981)
+  * d/p/build-Divide-mit-krb5-gssapi-link-flags-between-LDFLAGS-a: Refresh patch
+  * d/p/fix-managen-script: Drop merged patch
+  * d/watch: Point to rc releases and pick tar.xz tarballs
+
+ -- Samuel Henrique <samueloph@debian.org>  Mon, 17 Mar 2025 16:40:32 +0000
+
+curl (8.12.1-3) unstable; urgency=medium
+
+  [ Carlos Henrique Lima Melara ]
+  * d/p/fix-managen-script: cherry-pick from upstream to fix manpage
+
+  [ Samuel Henrique ]
+  * Update wcurl to 2025.02.24
+
+ -- Samuel Henrique <samueloph@debian.org>  Tue, 25 Feb 2025 19:30:46 +0000
+
+curl (8.12.1-2) unstable; urgency=medium
+
+  * Revert "Use valgrind in tests"
+    valgrind is not available on all archs, and there were too many test
+    failures on some that have it.
+    We should instead enable valgrind on experimental first, then address
+    those issues, and only then do it on unstable.
+  * d/copyright: Remove entry for projects/build-wolfssl.bat, removed file
+
+ -- Samuel Henrique <samueloph@debian.org>  Fri, 14 Feb 2025 21:27:50 +0000
+
+curl (8.12.1-1) unstable; urgency=medium
+
+  * New upstream version 8.12.1.
+  * Revert "d/copyright: exclude Windows related stuff from upstream tarball".
+    Not needed when using upstream releases or daily snapshots.
+  * Use valgrind in tests.
+  * d/control: libcurl4-openssl-dev: Depend on libnghttp3-dev.
+  * d/rules: Build OpenSSL with HTTP3 support.
+
+ -- Samuel Henrique <samueloph@debian.org>  Thu, 13 Feb 2025 22:17:23 +0000
+
+curl (8.12.0+git20250209.89ed161+ds-1) unstable; urgency=medium
+
+  [ Samuel Henrique ]
+  * d/curl.NEWS: Update wcurl's list of features
+
+  [ Carlos Henrique Lima Melara ]
+  * New upstream version 8.12.0+git20250209.89ed161+ds.
+  * d/copyright: update maintainer's copyright years.
+  * d/libcurl*.symbols: add symbols introduced in 8.12.0.
+  * d/patches/: rebase patches against 8.12.0
+      - async_thread_avoid_closing_eventfd_twice.patch: drop, present in 8.12.0.
+      - sectransp_free_certificate_on_error.patch: drop, present in 8.12.0.
+
+ -- Carlos Henrique Lima Melara <charlesmelara@riseup.net>  Sun, 09 Feb 2025 00:08:26 +0100
+
+curl (8.11.1-1) unstable; urgency=medium
+
+  [ Samuel Henrique ]
+  * New upstream version 8.11.1
+    - Fix CVE-2024-11053: netrc and redirect credential leak (closes: #1089682)
+  * Update wcurl to 2024.12.08
+  * New patches:
+    - async_thread_avoid_closing_eventfd_twice: Fix file descriptor issue with eventfd
+    - sectransp_free_certificate_on_error: Fix memory leak
+  * Refresh patches:
+    - ZZZgnutls-build
+    - build-Divide-mit-krb5-gssapi-link-flags-between-LDFLAGS-a
+  * d/p/11_omit-directories-from-config: Update patch
+  * Drop merged patches:
+    - cmdline_ech_md_formatting_cleanups
+    - duphandle_also_init_netrc
+    - libssh_when_using_IPv6_numerical_address_add_brackets
+    - netrc_support_large_file_longer_lines_longer_tokens
+    - setopt_fix_CURLOPT_HTTP_CONTENT_DECODING
+  * d/p/Remove-curl-s-LDFLAGS-from-curl-config-static-libs: Remove patch, not needed anymore
+
+  [ Carlos Henrique Lima Melara ]
+  * d/t/upstream-tests-*: test gnutls backend against installed curl
+  * d/t/control: install curl on upstream-tests-gnutls and remove on openssl
+
+ -- Samuel Henrique <samueloph@debian.org>  Thu, 12 Dec 2024 21:38:04 +0000
+
+curl (8.11.0-1) unstable; urgency=medium
+
+  [ Samuel Henrique ]
+  * New upstream version 8.11.0
+  * Fix CVE-2024-9681: HSTS subdomain overwrites parent cache entry
+   (closes: #1086804)
+  * Update patches for the new release
+  * d/rules: Drop '--enable-websockets', it's enabled by default now
+  * d/libcurl*.symbols: Remove HIDDEN@HIDDEN 7.16.2
+  * Add 5 upstream patches to fix regressions:
+    - cmdline_ech_md_formatting_cleanups.patch
+    - duphandle_also_init_netrc.patch
+    - libssh_when_using_IPv6_numerical_address_add_brackets.patch
+    - netrc_support_large_file_longer_lines_longer_tokens.patch
+    - setopt_fix_CURLOPT_HTTP_CONTENT_DECODING.patch
+
+  [ Carlos Henrique Lima Melara ]
+  * d/rules: add sed rule to make curl-config get CPPFLAGS in run-time
+  * d/control: move libldap2-dev to Depends and use newer libldap-dev name
+  * d/control: move libkrb5-dev from Suggests to Depends for -dev packages
+
+ -- Samuel Henrique <samueloph@debian.org>  Sat, 09 Nov 2024 17:34:22 +0000
+
+curl (8.10.1-2) unstable; urgency=medium
+
+  * d/patches/gtls_add_p12_format_support.patch: New upstream patch for P12
+    support
+
+ -- Samuel Henrique <samueloph@debian.org>  Thu, 10 Oct 2024 23:22:24 +0100
+
+curl (8.10.1-1) unstable; urgency=medium
+
+  * New upstream version 8.10.1
+  * d/p/ZZZgnutls-build.patch: Update patch
+
+ -- Samuel Henrique <samueloph@debian.org>  Wed, 18 Sep 2024 07:27:29 +0100
+
+curl (8.10.0-2) unstable; urgency=medium
+
+  [ Simon McVittie ]
+  * d/rules: Do not allow any undefined symbols when linking
+  * ZZZgnutls-build.patch: Resync libraries used for GNUTLS flavour
+    (closes: #1081514, #1081517, #1081533)
+  * ZZZgnutls-build.patch: De-conditionalize libcurlu.la  parameters
+
+ -- Samuel Henrique <samueloph@debian.org>  Thu, 12 Sep 2024 21:35:48 +0100
+
+curl (8.10.0-1) unstable; urgency=medium
+
+  * New upstream version 8.10.0
+    - Fix CVE-2024-8096 - OCSP stapling bypass with GnuTLS
+    - Fix curl -w '%{size_header}' for GnuTLS (closes: #1076800)
+  * d/copyright: Remove entry for deleted file tests/server/fake_ntlm.c
   * d/patches:
-    - url-use-same-credentials-on-redirect.patch: Backport upstream patch to
-      fix the issue of reusing closed connections when the server disconnects
-      unexpectedly, and ensure redirects keep both username and password.
-      This patch is required for CVE-2024-11053.
-    - CVE-2024-11053.patch: Import and backport upstream patch to
-      fix CVE-2024-11053
+    - Refresh patches
+    - ignore-SIGPIPE-after-init.patch: Drop patch, merged upstream
+  * d/rules:
+    - Replace buildconf invocation with autoreconf -fi
+    - dh_installchangelogs: s/CHANGES/CHANGES.md
+  * d/libcurl4-doc.docs: Remove dropped docs
+  * d/libcurl4t64.lintian-overrides: Remove unused overrides
 
- -- Matheus Polkorny <mpolkorny@gmail.com>  Sun, 19 Jan 2025 23:22:01 -0300
+ -- Samuel Henrique <samueloph@debian.org>  Wed, 11 Sep 2024 20:32:59 +0100
 
-curl (7.88.1-10+deb12u9) bookworm; urgency=medium
+curl (8.9.1-2) unstable; urgency=medium
 
-  * Team upload.
-  * Import patches for CVE-2024-9681
-    - A vulnerability in curl's HSTS handling allows a subdomain’s expiry time
-      to overwrite its parent domain’s cache entry. This can lead to unintended
-      HTTPS upgrades or premature reversion to HTTP when both subdomains and
-      parent domains are used. Affects applications with HSTS enabled,
-      potentially disrupting access when a domain stops supporting HTTPS.
-  * d/patches:
-    - CVE-2024-9681-*.patch: Backport patches.
-    - CVE-2024-9681-1: fix backport inconsistencies
-    - large-time-testable-feature.patch: Import 'large-time' feature for tests
-    - dont-stop-stunnel-before-retry.patch: Import patch to avoid stopping
-      stunnel before retrying
+  [ Steve McIntyre ]
+  * Improve the patch for the gnutls build. Instead of calling quilt
+    during the binary package build, use autotools to do the work we
+    need when calling configure etc. Closes: #1077650
 
- -- Aquila Macedo Costa <aquilamacedo@riseup.net>  Thu, 02 Jan 2025 21:11:56 -0300
+  [ Carlos Henrique Lima Melara ]
+  * debian/control: bump Standards-Version to 4.7.0, no changes needed.
+  * debian/patches/ignore-SIGPIPE-after-init.patch: add new patch from
+    upstream. (Closes: #1077854)
+  * debian/tests/build-using-libcurl*: add tests to check if libcurl headers
+    and pkgconf info are correct.
 
-curl (7.88.1-10+deb12u8) bookworm; urgency=medium
+ -- Carlos Henrique Lima Melara <charlesmelara@riseup.net>  Fri, 09 Aug 2024 19:47:58 -0300
 
-  * Team upload.
-  * Import patch for CVE-2024-8096
-    - CVE-2024-8096: When the TLS backend is GnuTLS, curl may incorrectly
-      handle OCSP stapling. If the OCSP status reports an error other than
-      "revoked" (e.g., "unauthorized"), it is not treated as a bad certificate,
-      potentially allowing invalid certificates to be considered valid.
+curl (8.9.1-1) unstable; urgency=medium
 
- -- Aquila Macedo Costa <aquilamacedo@riseup.net>  Tue, 17 Sep 2024 16:29:24 -0300
+  * New upstream version 8.9.1. (Closes: 1077656)
+    - fix CVE-2024-7264: ASN.1 date parser overread.
+  * debian/patch/build-Divide-mit-[...].patch: refresh patch.
 
-curl (7.88.1-10+deb12u7) bookworm; urgency=medium
+ -- Carlos Henrique Lima Melara <charlesmelara@riseup.net>  Wed, 31 Jul 2024 22:12:06 +0900
 
-  * Team upload.
-  * debian/patches/CVE-2024-7264*: import and backport upstream patches to fix
-    CVE-2024-7264 - ASN.1 date parser overread. (Closes: #1077656)
+curl (8.9.0-3) unstable; urgency=medium
 
- -- Carlos Henrique Lima Melara <charlesmelara@riseup.net>  Sat, 17 Aug 2024 14:06:29 -0300
+  * debian/control: make libcurl*-dev packages Depends on -dev packages.
+    (Closes: #1077197, #1077190)
+  * debian/rules: decrease tests parallelism multiplier.
 
-curl (7.88.1-10+deb12u6) bookworm; urgency=medium
+ -- Carlos Henrique Lima Melara <charlesmelara@riseup.net>  Sun, 28 Jul 2024 19:26:49 +0900
 
-  * Team upload.
+curl (8.9.0-2) unstable; urgency=medium
+
+  * debian/control: make libcurl*-dev packages Recommends -dev packages.
+    (Closes: #1077197, #1077190)
+
+ -- Carlos Henrique Lima Melara <charlesmelara@riseup.net>  Sat, 27 Jul 2024 12:53:28 +0900
+
+curl (8.9.0-1) unstable; urgency=medium
+
+  [ Samuel Henrique ]
+  * debian/curl.NEWS: Update wcurl description.
+
+  [ Carlos Henrique Lima Melara ]
+  * New upstream version 8.9.0. (Closes: #1076996)
+    - fix CVE-2024-6197: freeing stack buffer in utf8asn1str.
+    - fix CVE-2024-6874: macidn punycode buffer overread.
+  * debian/copyright: drop copyright from removed file.
+  * debian/patches/: drop merged patches and refresh patches against new
+    upstream release.
+      - docs_makefile_am_make_curl_config_1_install.patch: drop.
+      - fix-x509asn1-fallback-to-dotted-OID-representation.patch: drop.
+  * debian/gbp.conf: add upstream-branch definition.
+
+ -- Carlos Henrique Lima Melara <charlesmelara@riseup.net>  Thu, 25 Jul 2024 22:14:54 +0900
+
+curl (8.8.0-4) unstable; urgency=medium
+
+  [ Adrian Bunk ]
+  * Revert "Temporarily disable build-time tests on 32-bit non-x86"
+  * Don't use python3-impacket on non-Rust architectures that lack
+    python-cryptography
+
+  [ Lev Lazinskiy ]
+  * Use SALSA_CI_DPKG_BUILDPACKAGE_ARGS in pipeline
+
+  [ Samuel Henrique ]
+  * Update wcurl to 2024.07.10
+
+ -- Samuel Henrique <samueloph@debian.org>  Wed, 10 Jul 2024 22:36:04 +0100
+
+curl (8.8.0-3) unstable; urgency=medium
+
+  [ Carlos Henrique Lima Melara ]
+  * d/p/fix-x509asn1-fallback-to-dotted-OID-representation.patch: add patch
+    (Closes: #1075796)
+  * d/p/11_omit-directories-from-config.patch: update to remove new issue
+    (Closes: #1075802)
+  * d/p/04_workaround_as_needed_bug.patch: drop patch, not needed anymore
+
+  [ Samuel Henrique ]
+  * Update wcurl to 2024-07-07
+
+ -- Samuel Henrique <samueloph@debian.org>  Sun, 07 Jul 2024 00:42:42 +0100
+
+curl (8.8.0-2) unstable; urgency=medium
+
+  * curl.NEWS: Announce switch to GnuTLS, HTTP3 support and wcurl
+  * Switch curl package/binary to use gnutls, now with HTTP3 support
+  * Build libcurl-gnutls with HTTP3 support (build-dep on nghttp3 and ngtcp2)
+  * Build libcurl-gnutls with ca-bundle=/etc/ssl/certs/ca-certificates.crt
+  * Build with websockets support
+  * Ship fish completion file
+  * Ship wcurl and its manpage
+
+ -- Samuel Henrique <samueloph@debian.org>  Sun, 30 Jun 2024 13:53:05 +0100
+
+curl (8.8.0-1) unstable; urgency=medium
+
+  * New upstream version 8.8.0
+  * Refresh patches
+  * Revert "Temporarily disable LDAP support on 32-bit non-x86"
+  * d/patches: Drop merged patches
+  * d/p/docs_makefile...: Upstream patch to fix curl-config regression
+  * d/libcurl*.symbols: Add new symbol curl_multi_waitfds
+
+ -- Samuel Henrique <samueloph@debian.org>  Wed, 22 May 2024 22:22:28 +0100
+
+curl (8.7.1-5) unstable; urgency=high
+
+  * d/p/content_encoding_brotli_and_others...patch: New patch to fix an
+    encoding regression. Thank you to Jeroen Ooms and the curl developers
+    (Daniel Stenberg and Stefan Eissing) for reporting and pointing out the
+    fix.
+
+ -- Samuel Henrique <samueloph@debian.org>  Mon, 29 Apr 2024 18:28:54 +0100
+
+curl (8.7.1-4) unstable; urgency=medium
+
+  * d/p/curl-8_7_1-h2-ngtcp2-write-error-handling.diff: New patch to address
+    git+http2 issue. Thanks to Stefan Eissing <stefan@eissing.org> for
+    doing the backport.
+
+ -- Samuel Henrique <samueloph@debian.org>  Sat, 27 Apr 2024 18:00:28 +0100
+
+curl (8.7.1-3) unstable; urgency=medium
+
+  [ Carlos Henrique Lima Melara ]
+  * d/p/fix-regression-in-curlinfo.patch: add patch from upstream, thanks to
+    Antonio Terceiro for reporting it (closes: #1069292)
+
+  [ Samuel Henrique ]
+  * d/libcurl3t64-gnutls.lintian-overrides: Drop unused override
+
+ -- Samuel Henrique <samueloph@debian.org>  Fri, 19 Apr 2024 19:06:23 +0100
+
+curl (8.7.1-2) unstable; urgency=medium
+
+  [ Carlos Henrique Lima Melara ]
+  * d/rules: fix sed substitution regex for curl-config
+  * d/rules: make a call to dpkg-buildflags in curl-config to get CFLAGS
+    (Closes: #1057138)
+  * d/control: suggests dpkg-dev for -dev packages so we get dpkg goodies
+  * d/libcurl4-doc.docs: list each markdown file to be installed
+  * d/make-manpages-reproducible.patch: import from upstream
+  * d/p/fix-regression-on-chunked-post.patch: add new patch from upstream
 
   [ Sergio Durigan Junior ]
   * d/p/openldap-create-ldap-URLs-correctly-for-IPv6-addresses.patch:
     (Closes: #1053643)
 
-  [ Guilherme Puida Moreira ]
-  * Add patches to fix CVE-2024-2004 and CVE-2024-2398.
-    - CVE-2024-2004: When a protocol selection parameter disables all
-      protocols without adding any then the default set of protocols would
-      remain in the allowed set due to an error in the logic for removing
-      protocols.
-    - CVE-2024-2398: When an application tells libcurl it wants to allow
-      HTTP/2 server push and the amount of received headers for the push
-      surpasses the maximum allowed limit (1000), libcurl aborts the server
-      push and leaks the memory allocated for the previously allocated
-      headers.
-  * d/p/openldap-create-ldap-URLs-correctly-for-IPv6-addresses.patch:
-    Refresh patch.
+  [ Samuel Henrique ]
+  * d/rules: Run tests in parallel
+  * d/p/test1901...: New patch to confirm regression fix
 
- -- Guilherme Puida Moreira <guilherme@puida.xyz>  Tue, 02 Apr 2024 20:02:10 -0300
+ -- Samuel Henrique <samueloph@debian.org>  Wed, 03 Apr 2024 18:59:41 +0100
 
-curl (7.88.1-10+deb12u5) bookworm-security; urgency=high
+curl (8.7.1-1) unstable; urgency=medium
 
-  * Add patches to fix CVE-2023-46218 and CVE-2023-46219
+  * New upstream version 8.7.1
+    - Fix CVE-2024-2004: Usage of disabled protocol
+    - Fix CVE-2024-2398: HTTP/2 push headers memory-leak
+  * d/patches: Drop patches present on this release
+
+ -- Samuel Henrique <samueloph@debian.org>  Wed, 27 Mar 2024 19:02:14 +0000
+
+curl (8.6.0-4) unstable; urgency=medium
+
+  [ Carlos Henrique Lima Melara ]
+  * d/libcurl*.links: use substitution variables instead of executable files
+
+  [ Simon McVittie ]
+  * d/control: Add a build-profile that disables LDAP support
+    (closes: #1066981)
+  * Temporarily disable LDAP support on 32-bit non-x86 (closes: #1066982)
+  * Temporarily disable build-time tests on 32-bit non-x86
+
+ -- Samuel Henrique <samueloph@debian.org>  Sat, 16 Mar 2024 17:17:57 +0000
+
+curl (8.6.0-3.2) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Fix wrong X-Time64-Compat for libcurl4t64.  Closes: #1065315.
+
+ -- Steve Langasek <vorlon@debian.org>  Sat, 02 Mar 2024 18:43:58 +0000
+
+curl (8.6.0-3.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Rename libraries for 64-bit time_t transition.  Closes: #1061992
+
+ -- Steve Langasek <vorlon@debian.org>  Sat, 02 Mar 2024 07:11:53 +0000
+
+curl (8.6.0-3) unstable; urgency=medium
+
+  * d/p/vtls_revert_receive_max_buffer_add_test_case.patch: New patch to fix
+    tls regression (closes: #1063462)
+
+ -- Samuel Henrique <samueloph@debian.org>  Mon, 19 Feb 2024 22:16:17 +0000
+
+curl (8.6.0-2) unstable; urgency=medium
+
+  * d/p/sendf_ignore_response_body_to_head.patch: New upstream patch to fix a
+    compat issue (closes: #1063342)
+  * d/control: Switch from pkg-config to pkgconf
+
+ -- Samuel Henrique <samueloph@debian.org>  Tue, 06 Feb 2024 20:52:46 +0000
+
+curl (8.6.0-1) unstable; urgency=medium
+
+  [ Samuel Henrique ]
+  * New upstream version 8.6.0
+    - Fix CVE-2024-0853: OCSP verification bypass with TLS session reuse
+  * Drop upstream patches from 8.6.0
+  * Update approach for installing manpages
+  * d/copyright: Update copyright
+
+  [ Carlos Henrique Lima Melara ]
+  * d/control: exclude dependency on gnutls-bin for tests on ppc64el
+    (Closes: #1059952)
+
+ -- Samuel Henrique <samueloph@debian.org>  Wed, 31 Jan 2024 21:51:05 +0000
+
+curl (8.5.0-2) unstable; urgency=medium
+
+  * d/p/openldap_fix_an_LDAP_crash.patch: New patch to fix ldap segfault
+    (closes: #1057855)
+
+ -- Samuel Henrique <samueloph@debian.org>  Fri, 29 Dec 2023 15:34:11 -0300
+
+curl (8.5.0-1) unstable; urgency=medium
+
+  [ Samuel Henrique ]
+  * New upstream version 8.5.0
+    - Fix CVE-2023-46218: cookie mixed case PSL bypass (closes: #1057646)
+    - Fix CVE-2023-46219: HSTS long file name clears contents (closes: #1057645)
+  * d/rules: Use pkg-info.mk instead of dpkg-parsechangelog for DEB_VERSION
+  * d/p/90_gnutls.patch: Update patch
+  * d/p/dist_add_tests_errorcodes_pl_to_the_tarball.patch: Upstream patch to
+    fix tests
+  * d/p/add_errorcodes_upstream_file.patch: Include missing file from upstream
+    tarball
+
+  [ Carlos Henrique Lima Melara ]
+  * d/control: change Maintainer field to curl packaging team
+  * d/README.Debian: add readme to explain curl's team creation
+  * d/control: add myself to Uploaders
+
+ -- Samuel Henrique <samueloph@debian.org>  Wed, 06 Dec 2023 20:15:49 +0000
+
+curl (8.4.0-2) unstable; urgency=medium
+
   * d/rules: set CURL_PATCHSTAMP to package's version, so it shows up in
     "--version" output
 
- -- Samuel Henrique <samueloph@debian.org>  Sun, 10 Dec 2023 06:07:30 +0000
+ -- Samuel Henrique <samueloph@debian.org>  Sat, 14 Oct 2023 12:19:21 +0100
 
-curl (7.88.1-10+deb12u4) bookworm-security; urgency=high
+curl (8.4.0-1) unstable; urgency=medium
+
+  * New upstream version 8.4.0
+  * d/libcurl*.symbols: New symbol curl_multi_get_handles
+  * d/patches:
+    - Remove patches from 8.4.0 release
+    - 90_gnutls.patch: Update patch
+
+ -- Samuel Henrique <samueloph@debian.org>  Fri, 13 Oct 2023 00:53:16 +0100
+
+curl (8.3.0-3) unstable; urgency=high
 
   * Add patches to fix CVE-2023-38545 and CVE-2023-38546
 
- -- Samuel Henrique <samueloph@debian.org>  Thu, 05 Oct 2023 22:31:47 +0100
+ -- Samuel Henrique <samueloph@debian.org>  Thu, 05 Oct 2023 22:26:40 +0100
 
-curl (7.88.1-10+deb12u3) bookworm; urgency=medium
+curl (8.3.0-2) unstable; urgency=medium
 
-  * Team upload.
+  * d/rules: Add test 3102 to TESTS_FAILS_ON_IPV6_ONLY_MACHINES
+  * d/patches: Import two upstream patches to try to fix FTBFS on armel/armhf
+    - test650_fix_an_end_tag_typo.patch
+    - tests_increase_the_default_server_logs_lock_timeout.patch
+  * d/p/lib_use_wrapper_for_curl_mime_data_fseek_callback.patch: New patch to
+    fix armel/armhf FTBFS
+
+ -- Samuel Henrique <samueloph@debian.org>  Sun, 01 Oct 2023 15:01:42 +0100
+
+curl (8.3.0-1) unstable; urgency=medium
+
+  * New upstream version 8.3.0
+    - Fix CVE-2023-38039: HTTP headers eat all memory
+  * debian/: Remove files used for the nss packaging
+  * d/patches:
+    - Refresh patches
+    - gen_pl_escape_all_dashes.patch: Drop merged patch
+    - 90_gnutls.patch: Update patch
+  * d/libcurl*.symbols: New symbol curl_global_trace
+
+ -- Samuel Henrique <samueloph@debian.org>  Thu, 14 Sep 2023 16:13:10 +0530
+
+curl (8.2.1-2) unstable; urgency=medium
 
   [ Andreas Hasenack ]
-  * Move ldap-test to a script and add retry logic.
+  * Move ldap-test to a script and add retry logic
+
+  [ Samuel Henrique ]
+  * Build without nss, dropped by upstream in the next release
+  * d/p/gen_pl_escape_all_dashes.patch: New patch to fix manpage generation
+    (closes: #1043309, #1043339)
+
+ -- Samuel Henrique <samueloph@debian.org>  Fri, 25 Aug 2023 20:05:02 +0100
+
+curl (8.2.1-1) unstable; urgency=medium
+
+  [ Samuel Henrique ]
+  * New upstream version 8.2.1
+
+  [ Sergio Durigan Junior ]
+  * d/p/{90_gnutls,99_nss}.patch:
+    Update GNUTls/NSS patches to unbreak tests/http/clients
+  * Drop unnecessary patches.
+    d/p/CVE-2023-27533.patch
+    d/p/CVE-2023-27534.patch
+    d/p/CVE-2023-27535.patch
+    d/p/CVE-2023-27536.patch
+    d/p/CVE-2023-27537.patch
+    d/p/CVE-2023-27538.patch
+    d/p/CVE-2023-28319.patch
+    d/p/CVE-2023-28320-1.patch
+    d/p/CVE-2023-28320.patch
+    d/p/CVE-2023-28321.patch
+    d/p/CVE-2023-28322.patch
+    d/p/CVE-2023-32001.patch
+    d/p/Use-OpenLDAP-specific-functionality.patch
+    d/p/fix-unix-domain-socket.patch
+
+ -- Sergio Durigan Junior <sergiodj@debian.org>  Thu, 03 Aug 2023 20:00:01 -0400
+
+curl (7.88.1-11) unstable; urgency=medium
 
   [ Carlos Henrique Lima Melara ]
-  * Fix CVE-2023-38039: HTTP headers eat all memory.
-      - Done by debian/patches/CVE-2023-38039.patch.
+  * Fix CVE-2023-32001: TOCTOU race condition in Curl_fopen():
+    - Done by d/p/CVE-2023-32001.patch (Closes: #1041812).
 
- -- Carlos Henrique Lima Melara <charlesmelara@riseup.net>  Fri, 15 Sep 2023 22:31:23 +0530
-
-curl (7.88.1-10+deb12u2) bookworm; urgency=medium
-
-  * Team upload.
+  [ John Scott ]
   * LDAP backend: correct the usage of OpenLDAP-specific functionality being
     disabled with an upstream patch (Closes: #1041964)
     This corrects the improper fetching of binary attributes.
   * debian/tests: add a DEP-8 test that getting binary LDAP attributes works now
 
- -- John Scott <jscott@posteo.net>  Tue, 25 Jul 2023 08:11:34 -0400
-
-curl (7.88.1-10+deb12u1) bookworm-security; urgency=medium
-
-  * Team upload.
-  * Fix CVE-2023-32001: TOCTOU race condition in Curl_fopen():
-    - Done by d/p/CVE-2023-32001.patch (Closes: #1041812).
-
- -- Carlos Henrique Lima Melara <charlesmelara@riseup.net>  Sun, 23 Jul 2023 18:43:52 -0300
+ -- Samuel Henrique <samueloph@debian.org>  Fri, 28 Jul 2023 21:11:25 +0100
 
 curl (7.88.1-10) unstable; urgency=medium
 

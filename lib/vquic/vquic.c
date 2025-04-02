@@ -24,18 +24,27 @@
 
 #include "curl_setup.h"
 
+#ifdef HAVE_NETINET_UDP_H
+#include <netinet/udp.h>
+#endif
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
 #include "urldata.h"
+#include "bufq.h"
 #include "dynbuf.h"
 #include "cfilters.h"
-#include "curl_log.h"
+#include "curl_trc.h"
 #include "curl_msh3.h"
 #include "curl_ngtcp2.h"
+#include "curl_osslq.h"
 #include "curl_quiche.h"
+#include "multiif.h"
+#include "rand.h"
 #include "vquic.h"
 #include "vquic_int.h"
+#include "strerror.h"
+#include "strparse.h"
 
 /* The last 3 #include files should be in this order */
 #include "curl_printf.h"
@@ -43,18 +52,18 @@
 #include "memdebug.h"
 
 
-#ifdef ENABLE_QUIC
+#ifdef USE_HTTP3
 
-#ifdef O_BINARY
-#define QLOGMODE O_WRONLY|O_CREAT|O_BINARY
-#else
-#define QLOGMODE O_WRONLY|O_CREAT
-#endif
+#define NW_CHUNK_SIZE     (64 * 1024)
+#define NW_SEND_CHUNKS    2
+
 
 void Curl_quic_ver(char *p, size_t len)
 {
-#ifdef USE_NGTCP2
+#if defined(USE_NGTCP2) && defined(USE_NGHTTP3)
   Curl_ngtcp2_ver(p, len);
+#elif defined(USE_OPENSSL_QUIC) && defined(USE_NGHTTP3)
+  Curl_osslq_ver(p, len);
 #elif defined(USE_QUICHE)
   Curl_quiche_ver(p, len);
 #elif defined(USE_MSH3)
@@ -62,30 +71,38 @@ void Curl_quic_ver(char *p, size_t len)
 #endif
 }
 
-CURLcode vquic_ctx_init(struct cf_quic_ctx *qctx, size_t pktbuflen)
+CURLcode vquic_ctx_init(struct cf_quic_ctx *qctx)
 {
-  qctx->num_blocked_pkt = 0;
-  qctx->num_blocked_pkt_sent = 0;
-  memset(&qctx->blocked_pkt, 0, sizeof(qctx->blocked_pkt));
-
-  qctx->pktbuflen = pktbuflen;
-  qctx->pktbuf = malloc(qctx->pktbuflen);
-  if(!qctx->pktbuf)
-    return CURLE_OUT_OF_MEMORY;
-
+  Curl_bufq_init2(&qctx->sendbuf, NW_CHUNK_SIZE, NW_SEND_CHUNKS,
+                  BUFQ_OPT_SOFT_LIMIT);
 #if defined(__linux__) && defined(UDP_SEGMENT) && defined(HAVE_SENDMSG)
   qctx->no_gso = FALSE;
 #else
   qctx->no_gso = TRUE;
 #endif
+#ifdef DEBUGBUILD
+  {
+    const char *p = getenv("CURL_DBG_QUIC_WBLOCK");
+    if(p) {
+      curl_off_t l;
+      if(!Curl_str_number(&p, &l, 100))
+        qctx->wblock_percent = (int)l;
+    }
+  }
+#endif
+  vquic_ctx_update_time(qctx);
 
   return CURLE_OK;
 }
 
 void vquic_ctx_free(struct cf_quic_ctx *qctx)
 {
-  free(qctx->pktbuf);
-  qctx->pktbuf = NULL;
+  Curl_bufq_free(&qctx->sendbuf);
+}
+
+void vquic_ctx_update_time(struct cf_quic_ctx *qctx)
+{
+  qctx->last_op = Curl_now();
 }
 
 static CURLcode send_packet_no_gso(struct Curl_cfilter *cf,
@@ -110,7 +127,7 @@ static CURLcode do_sendmsg(struct Curl_cfilter *cf,
 #endif
 
   *psent = 0;
-  msg_iov.iov_base = (uint8_t *)pkt;
+  msg_iov.iov_base = (uint8_t *)CURL_UNCONST(pkt);
   msg_iov.iov_len = pktlen;
   msg.msg_iov = &msg_iov;
   msg.msg_iovlen = 1;
@@ -120,8 +137,8 @@ static CURLcode do_sendmsg(struct Curl_cfilter *cf,
     /* Only set this, when we need it. macOS, for example,
      * does not seem to like a msg_control of length 0. */
     msg.msg_control = msg_ctrl;
-    assert(sizeof(msg_ctrl) >= CMSG_SPACE(sizeof(uint16_t)));
-    msg.msg_controllen = CMSG_SPACE(sizeof(uint16_t));
+    assert(sizeof(msg_ctrl) >= CMSG_SPACE(sizeof(int)));
+    msg.msg_controllen = CMSG_SPACE(sizeof(int));
     cm = CMSG_FIRSTHDR(&msg);
     cm->cmsg_level = SOL_UDP;
     cm->cmsg_type = UDP_SEGMENT;
@@ -131,28 +148,29 @@ static CURLcode do_sendmsg(struct Curl_cfilter *cf,
 #endif
 
 
-  while((sent = sendmsg(qctx->sockfd, &msg, 0)) == -1 && SOCKERRNO == EINTR)
+  while((sent = sendmsg(qctx->sockfd, &msg, 0)) == -1 &&
+        SOCKERRNO == SOCKEINTR)
     ;
 
   if(sent == -1) {
     switch(SOCKERRNO) {
     case EAGAIN:
-#if EAGAIN != EWOULDBLOCK
-    case EWOULDBLOCK:
+#if EAGAIN != SOCKEWOULDBLOCK
+    case SOCKEWOULDBLOCK:
 #endif
       return CURLE_AGAIN;
-    case EMSGSIZE:
+    case SOCKEMSGSIZE:
       /* UDP datagram is too large; caused by PMTUD. Just let it be lost. */
       break;
     case EIO:
       if(pktlen > gsolen) {
         /* GSO failure */
-        failf(data, "sendmsg() returned %zd (errno %d); disable GSO", sent,
+        infof(data, "sendmsg() returned %zd (errno %d); disable GSO", sent,
               SOCKERRNO);
         qctx->no_gso = TRUE;
         return send_packet_no_gso(cf, data, qctx, pkt, pktlen, gsolen, psent);
       }
-      /* FALLTHROUGH */
+      FALLTHROUGH();
     default:
       failf(data, "sendmsg() returned %zd (errno %d)", sent, SOCKERRNO);
       return CURLE_SEND_ERROR;
@@ -167,17 +185,18 @@ static CURLcode do_sendmsg(struct Curl_cfilter *cf,
 
   *psent = 0;
 
-  while((sent = send(qctx->sockfd, (const char *)pkt, pktlen, 0)) == -1 &&
-        SOCKERRNO == EINTR)
+  while((sent = send(qctx->sockfd,
+                     (const char *)pkt, (SEND_TYPE_ARG3)pktlen, 0)) == -1 &&
+        SOCKERRNO == SOCKEINTR)
     ;
 
   if(sent == -1) {
-    if(SOCKERRNO == EAGAIN || SOCKERRNO == EWOULDBLOCK) {
+    if(SOCKERRNO == EAGAIN || SOCKERRNO == SOCKEWOULDBLOCK) {
       return CURLE_AGAIN;
     }
     else {
       failf(data, "send() returned %zd (errno %d)", sent, SOCKERRNO);
-      if(SOCKERRNO != EMSGSIZE) {
+      if(SOCKERRNO != SOCKEMSGSIZE) {
         return CURLE_SEND_ERROR;
       }
       /* UDP datagram is too large; caused by PMTUD. Just let it be
@@ -214,66 +233,392 @@ static CURLcode send_packet_no_gso(struct Curl_cfilter *cf,
   return CURLE_OK;
 }
 
-CURLcode vquic_send_packet(struct Curl_cfilter *cf,
-                           struct Curl_easy *data,
-                           struct cf_quic_ctx *qctx,
-                           const uint8_t *pkt, size_t pktlen, size_t gsolen,
-                           size_t *psent)
+static CURLcode vquic_send_packets(struct Curl_cfilter *cf,
+                                   struct Curl_easy *data,
+                                   struct cf_quic_ctx *qctx,
+                                   const uint8_t *pkt, size_t pktlen,
+                                   size_t gsolen, size_t *psent)
 {
-  if(qctx->no_gso && pktlen > gsolen) {
-    return send_packet_no_gso(cf, data, qctx, pkt, pktlen, gsolen, psent);
+  CURLcode result;
+#ifdef DEBUGBUILD
+  /* simulate network blocking/partial writes */
+  if(qctx->wblock_percent > 0) {
+    unsigned char c;
+    *psent = 0;
+    Curl_rand(data, &c, 1);
+    if(c >= ((100-qctx->wblock_percent)*256/100)) {
+      CURL_TRC_CF(data, cf, "vquic_flush() simulate EWOULDBLOCK");
+      return CURLE_AGAIN;
+    }
   }
-
-  return do_sendmsg(cf, data, qctx, pkt, pktlen, gsolen, psent);
+#endif
+  if(qctx->no_gso && pktlen > gsolen) {
+    result = send_packet_no_gso(cf, data, qctx, pkt, pktlen, gsolen, psent);
+  }
+  else {
+    result = do_sendmsg(cf, data, qctx, pkt, pktlen, gsolen, psent);
+  }
+  if(!result)
+    qctx->last_io = qctx->last_op;
+  return result;
 }
 
-
-
-void vquic_push_blocked_pkt(struct Curl_cfilter *cf,
-                            struct cf_quic_ctx *qctx,
-                            const uint8_t *pkt, size_t pktlen, size_t gsolen)
+CURLcode vquic_flush(struct Curl_cfilter *cf, struct Curl_easy *data,
+                     struct cf_quic_ctx *qctx)
 {
-  struct vquic_blocked_pkt *blkpkt;
+  const unsigned char *buf;
+  size_t blen, sent;
+  CURLcode result;
+  size_t gsolen;
 
-  (void)cf;
-  assert(qctx->num_blocked_pkt <
-         sizeof(qctx->blocked_pkt) / sizeof(qctx->blocked_pkt[0]));
+  while(Curl_bufq_peek(&qctx->sendbuf, &buf, &blen)) {
+    gsolen = qctx->gsolen;
+    if(qctx->split_len) {
+      gsolen = qctx->split_gsolen;
+      if(blen > qctx->split_len)
+        blen = qctx->split_len;
+    }
 
-  blkpkt = &qctx->blocked_pkt[qctx->num_blocked_pkt++];
-
-  blkpkt->pkt = pkt;
-  blkpkt->pktlen = pktlen;
-  blkpkt->gsolen = gsolen;
-}
-
-CURLcode vquic_send_blocked_pkt(struct Curl_cfilter *cf,
-                                struct Curl_easy *data,
-                                struct cf_quic_ctx *qctx)
-{
-  size_t sent;
-  CURLcode curlcode;
-  struct vquic_blocked_pkt *blkpkt;
-
-  (void)cf;
-  for(; qctx->num_blocked_pkt_sent < qctx->num_blocked_pkt;
-      ++qctx->num_blocked_pkt_sent) {
-    blkpkt = &qctx->blocked_pkt[qctx->num_blocked_pkt_sent];
-    curlcode = vquic_send_packet(cf, data, qctx, blkpkt->pkt,
-                                 blkpkt->pktlen, blkpkt->gsolen, &sent);
-
-    if(curlcode) {
-      if(curlcode == CURLE_AGAIN) {
-        blkpkt->pkt += sent;
-        blkpkt->pktlen -= sent;
+    result = vquic_send_packets(cf, data, qctx, buf, blen, gsolen, &sent);
+    CURL_TRC_CF(data, cf, "vquic_send(len=%zu, gso=%zu) -> %d, sent=%zu",
+                blen, gsolen, result, sent);
+    if(result) {
+      if(result == CURLE_AGAIN) {
+        Curl_bufq_skip(&qctx->sendbuf, sent);
+        if(qctx->split_len)
+          qctx->split_len -= sent;
       }
-      return curlcode;
+      return result;
+    }
+    Curl_bufq_skip(&qctx->sendbuf, sent);
+    if(qctx->split_len)
+      qctx->split_len -= sent;
+  }
+  return CURLE_OK;
+}
+
+CURLcode vquic_send(struct Curl_cfilter *cf, struct Curl_easy *data,
+                        struct cf_quic_ctx *qctx, size_t gsolen)
+{
+  qctx->gsolen = gsolen;
+  return vquic_flush(cf, data, qctx);
+}
+
+CURLcode vquic_send_tail_split(struct Curl_cfilter *cf, struct Curl_easy *data,
+                               struct cf_quic_ctx *qctx, size_t gsolen,
+                               size_t tail_len, size_t tail_gsolen)
+{
+  DEBUGASSERT(Curl_bufq_len(&qctx->sendbuf) > tail_len);
+  qctx->split_len = Curl_bufq_len(&qctx->sendbuf) - tail_len;
+  qctx->split_gsolen = gsolen;
+  qctx->gsolen = tail_gsolen;
+  CURL_TRC_CF(data, cf, "vquic_send_tail_split: [%zu gso=%zu][%zu gso=%zu]",
+              qctx->split_len, qctx->split_gsolen,
+              tail_len, qctx->gsolen);
+  return vquic_flush(cf, data, qctx);
+}
+
+#if defined(HAVE_SENDMMSG) || defined(HAVE_SENDMSG)
+static size_t vquic_msghdr_get_udp_gro(struct msghdr *msg)
+{
+  int gso_size = 0;
+#if defined(__linux__) && defined(UDP_GRO)
+  struct cmsghdr *cmsg;
+
+  /* Workaround musl CMSG_NXTHDR issue */
+#if defined(__clang__) && !defined(__GLIBC__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wsign-compare"
+#pragma clang diagnostic ignored "-Wcast-align"
+#endif
+  for(cmsg = CMSG_FIRSTHDR(msg); cmsg; cmsg = CMSG_NXTHDR(msg, cmsg)) {
+#if defined(__clang__) && !defined(__GLIBC__)
+#pragma clang diagnostic pop
+#endif
+    if(cmsg->cmsg_level == SOL_UDP && cmsg->cmsg_type == UDP_GRO) {
+      memcpy(&gso_size, CMSG_DATA(cmsg), sizeof(gso_size));
+
+      break;
+    }
+  }
+#endif
+  (void)msg;
+
+  return (size_t)gso_size;
+}
+#endif
+
+#ifdef HAVE_SENDMMSG
+static CURLcode recvmmsg_packets(struct Curl_cfilter *cf,
+                                 struct Curl_easy *data,
+                                 struct cf_quic_ctx *qctx,
+                                 size_t max_pkts,
+                                 vquic_recv_pkt_cb *recv_cb, void *userp)
+{
+#define MMSG_NUM  16
+  struct iovec msg_iov[MMSG_NUM];
+  struct mmsghdr mmsg[MMSG_NUM];
+  uint8_t msg_ctrl[MMSG_NUM * CMSG_SPACE(sizeof(int))];
+  struct sockaddr_storage remote_addr[MMSG_NUM];
+  size_t total_nread = 0, pkts = 0;
+  int mcount, i, n;
+  char errstr[STRERROR_LEN];
+  CURLcode result = CURLE_OK;
+  size_t gso_size;
+  size_t pktlen;
+  size_t offset, to;
+  char *sockbuf = NULL;
+  uint8_t (*bufs)[64*1024] = NULL;
+
+  DEBUGASSERT(max_pkts > 0);
+  result = Curl_multi_xfer_sockbuf_borrow(data, MMSG_NUM * sizeof(bufs[0]),
+                                          &sockbuf);
+  if(result)
+    goto out;
+  bufs = (uint8_t (*)[64*1024])sockbuf;
+
+  total_nread = 0;
+  while(pkts < max_pkts) {
+    n = (int)CURLMIN(CURLMIN(MMSG_NUM, IOV_MAX), max_pkts);
+    memset(&mmsg, 0, sizeof(mmsg));
+    for(i = 0; i < n; ++i) {
+      msg_iov[i].iov_base = bufs[i];
+      msg_iov[i].iov_len = (int)sizeof(bufs[i]);
+      mmsg[i].msg_hdr.msg_iov = &msg_iov[i];
+      mmsg[i].msg_hdr.msg_iovlen = 1;
+      mmsg[i].msg_hdr.msg_name = &remote_addr[i];
+      mmsg[i].msg_hdr.msg_namelen = sizeof(remote_addr[i]);
+      mmsg[i].msg_hdr.msg_control = &msg_ctrl[i * CMSG_SPACE(sizeof(int))];
+      mmsg[i].msg_hdr.msg_controllen = CMSG_SPACE(sizeof(int));
+    }
+
+    while((mcount = recvmmsg(qctx->sockfd, mmsg, n, 0, NULL)) == -1 &&
+          SOCKERRNO == SOCKEINTR)
+      ;
+    if(mcount == -1) {
+      if(SOCKERRNO == EAGAIN || SOCKERRNO == SOCKEWOULDBLOCK) {
+        CURL_TRC_CF(data, cf, "ingress, recvmmsg -> EAGAIN");
+        goto out;
+      }
+      if(!cf->connected && SOCKERRNO == SOCKECONNREFUSED) {
+        struct ip_quadruple ip;
+        Curl_cf_socket_peek(cf->next, data, NULL, NULL, &ip);
+        failf(data, "QUIC: connection to %s port %u refused",
+              ip.remote_ip, ip.remote_port);
+        result = CURLE_COULDNT_CONNECT;
+        goto out;
+      }
+      Curl_strerror(SOCKERRNO, errstr, sizeof(errstr));
+      failf(data, "QUIC: recvmsg() unexpectedly returned %d (errno=%d; %s)",
+                  mcount, SOCKERRNO, errstr);
+      result = CURLE_RECV_ERROR;
+      goto out;
+    }
+
+    CURL_TRC_CF(data, cf, "recvmmsg() -> %d packets", mcount);
+    for(i = 0; i < mcount; ++i) {
+      total_nread += mmsg[i].msg_len;
+
+      gso_size = vquic_msghdr_get_udp_gro(&mmsg[i].msg_hdr);
+      if(gso_size == 0) {
+        gso_size = mmsg[i].msg_len;
+      }
+
+      for(offset = 0; offset < mmsg[i].msg_len; offset = to) {
+        ++pkts;
+
+        to = offset + gso_size;
+        if(to > mmsg[i].msg_len) {
+          pktlen = mmsg[i].msg_len - offset;
+        }
+        else {
+          pktlen = gso_size;
+        }
+
+        result = recv_cb(bufs[i] + offset, pktlen, mmsg[i].msg_hdr.msg_name,
+                         mmsg[i].msg_hdr.msg_namelen, 0, userp);
+        if(result)
+          goto out;
+      }
     }
   }
 
-  qctx->num_blocked_pkt = 0;
-  qctx->num_blocked_pkt_sent = 0;
+out:
+  if(total_nread || result)
+    CURL_TRC_CF(data, cf, "recvd %zu packets with %zu bytes -> %d",
+                pkts, total_nread, result);
+  Curl_multi_xfer_sockbuf_release(data, sockbuf);
+  return result;
+}
 
-  return CURLE_OK;
+#elif defined(HAVE_SENDMSG)
+static CURLcode recvmsg_packets(struct Curl_cfilter *cf,
+                                struct Curl_easy *data,
+                                struct cf_quic_ctx *qctx,
+                                size_t max_pkts,
+                                vquic_recv_pkt_cb *recv_cb, void *userp)
+{
+  struct iovec msg_iov;
+  struct msghdr msg;
+  uint8_t buf[64*1024];
+  struct sockaddr_storage remote_addr;
+  size_t total_nread, pkts;
+  ssize_t nread;
+  char errstr[STRERROR_LEN];
+  CURLcode result = CURLE_OK;
+  uint8_t msg_ctrl[CMSG_SPACE(sizeof(int))];
+  size_t gso_size;
+  size_t pktlen;
+  size_t offset, to;
+
+  msg_iov.iov_base = buf;
+  msg_iov.iov_len = (int)sizeof(buf);
+
+  memset(&msg, 0, sizeof(msg));
+  msg.msg_iov = &msg_iov;
+  msg.msg_iovlen = 1;
+  msg.msg_control = msg_ctrl;
+
+  DEBUGASSERT(max_pkts > 0);
+  for(pkts = 0, total_nread = 0; pkts < max_pkts;) {
+    msg.msg_name = &remote_addr;
+    msg.msg_namelen = sizeof(remote_addr);
+    msg.msg_controllen = sizeof(msg_ctrl);
+    while((nread = recvmsg(qctx->sockfd, &msg, 0)) == -1 &&
+          SOCKERRNO == SOCKEINTR)
+      ;
+    if(nread == -1) {
+      if(SOCKERRNO == EAGAIN || SOCKERRNO == SOCKEWOULDBLOCK) {
+        goto out;
+      }
+      if(!cf->connected && SOCKERRNO == SOCKECONNREFUSED) {
+        struct ip_quadruple ip;
+        Curl_cf_socket_peek(cf->next, data, NULL, NULL, &ip);
+        failf(data, "QUIC: connection to %s port %u refused",
+              ip.remote_ip, ip.remote_port);
+        result = CURLE_COULDNT_CONNECT;
+        goto out;
+      }
+      Curl_strerror(SOCKERRNO, errstr, sizeof(errstr));
+      failf(data, "QUIC: recvmsg() unexpectedly returned %zd (errno=%d; %s)",
+                  nread, SOCKERRNO, errstr);
+      result = CURLE_RECV_ERROR;
+      goto out;
+    }
+
+    total_nread += (size_t)nread;
+
+    gso_size = vquic_msghdr_get_udp_gro(&msg);
+    if(gso_size == 0) {
+      gso_size = (size_t)nread;
+    }
+
+    for(offset = 0; offset < (size_t)nread; offset = to) {
+      ++pkts;
+
+      to = offset + gso_size;
+      if(to > (size_t)nread) {
+        pktlen = (size_t)nread - offset;
+      }
+      else {
+        pktlen = gso_size;
+      }
+
+      result =
+        recv_cb(buf + offset, pktlen, msg.msg_name, msg.msg_namelen, 0, userp);
+      if(result)
+        goto out;
+    }
+  }
+
+out:
+  if(total_nread || result)
+    CURL_TRC_CF(data, cf, "recvd %zu packets with %zu bytes -> %d",
+                pkts, total_nread, result);
+  return result;
+}
+
+#else /* HAVE_SENDMMSG || HAVE_SENDMSG */
+static CURLcode recvfrom_packets(struct Curl_cfilter *cf,
+                                 struct Curl_easy *data,
+                                 struct cf_quic_ctx *qctx,
+                                 size_t max_pkts,
+                                 vquic_recv_pkt_cb *recv_cb, void *userp)
+{
+  uint8_t buf[64*1024];
+  int bufsize = (int)sizeof(buf);
+  struct sockaddr_storage remote_addr;
+  socklen_t remote_addrlen = sizeof(remote_addr);
+  size_t total_nread, pkts;
+  ssize_t nread;
+  char errstr[STRERROR_LEN];
+  CURLcode result = CURLE_OK;
+
+  DEBUGASSERT(max_pkts > 0);
+  for(pkts = 0, total_nread = 0; pkts < max_pkts;) {
+    while((nread = recvfrom(qctx->sockfd, (char *)buf, bufsize, 0,
+                            (struct sockaddr *)&remote_addr,
+                            &remote_addrlen)) == -1 &&
+          SOCKERRNO == SOCKEINTR)
+      ;
+    if(nread == -1) {
+      if(SOCKERRNO == EAGAIN || SOCKERRNO == SOCKEWOULDBLOCK) {
+        CURL_TRC_CF(data, cf, "ingress, recvfrom -> EAGAIN");
+        goto out;
+      }
+      if(!cf->connected && SOCKERRNO == SOCKECONNREFUSED) {
+        struct ip_quadruple ip;
+        Curl_cf_socket_peek(cf->next, data, NULL, NULL, &ip);
+        failf(data, "QUIC: connection to %s port %u refused",
+              ip.remote_ip, ip.remote_port);
+        result = CURLE_COULDNT_CONNECT;
+        goto out;
+      }
+      Curl_strerror(SOCKERRNO, errstr, sizeof(errstr));
+      failf(data, "QUIC: recvfrom() unexpectedly returned %zd (errno=%d; %s)",
+                  nread, SOCKERRNO, errstr);
+      result = CURLE_RECV_ERROR;
+      goto out;
+    }
+
+    ++pkts;
+    total_nread += (size_t)nread;
+    result = recv_cb(buf, (size_t)nread, &remote_addr, remote_addrlen,
+                     0, userp);
+    if(result)
+      goto out;
+  }
+
+out:
+  if(total_nread || result)
+    CURL_TRC_CF(data, cf, "recvd %zu packets with %zu bytes -> %d",
+                pkts, total_nread, result);
+  return result;
+}
+#endif /* !HAVE_SENDMMSG && !HAVE_SENDMSG */
+
+CURLcode vquic_recv_packets(struct Curl_cfilter *cf,
+                            struct Curl_easy *data,
+                            struct cf_quic_ctx *qctx,
+                            size_t max_pkts,
+                            vquic_recv_pkt_cb *recv_cb, void *userp)
+{
+  CURLcode result;
+#if defined(HAVE_SENDMMSG)
+  result = recvmmsg_packets(cf, data, qctx, max_pkts, recv_cb, userp);
+#elif defined(HAVE_SENDMSG)
+  result = recvmsg_packets(cf, data, qctx, max_pkts, recv_cb, userp);
+#else
+  result = recvfrom_packets(cf, data, qctx, max_pkts, recv_cb, userp);
+#endif
+  if(!result) {
+    if(!qctx->got_first_byte) {
+      qctx->got_first_byte = TRUE;
+      qctx->first_byte_at = qctx->last_op;
+    }
+    qctx->last_io = qctx->last_op;
+  }
+  return result;
 }
 
 /*
@@ -308,7 +653,7 @@ CURLcode Curl_qlogdir(struct Curl_easy *data,
       result = Curl_dyn_add(&fname, ".sqlog");
 
     if(!result) {
-      int qlogfd = open(Curl_dyn_ptr(&fname), QLOGMODE,
+      int qlogfd = open(Curl_dyn_ptr(&fname), O_WRONLY|O_CREAT|CURL_O_BINARY,
                         data->set.new_file_perms);
       if(qlogfd != -1)
         *qlogfdp = qlogfd;
@@ -329,8 +674,10 @@ CURLcode Curl_cf_quic_create(struct Curl_cfilter **pcf,
 {
   (void)transport;
   DEBUGASSERT(transport == TRNSPRT_QUIC);
-#ifdef USE_NGTCP2
+#if defined(USE_NGTCP2) && defined(USE_NGHTTP3)
   return Curl_cf_ngtcp2_create(pcf, data, conn, ai);
+#elif defined(USE_OPENSSL_QUIC) && defined(USE_NGHTTP3)
+  return Curl_cf_osslq_create(pcf, data, conn, ai);
 #elif defined(USE_QUICHE)
   return Curl_cf_quiche_create(pcf, data, conn, ai);
 #elif defined(USE_MSH3)
@@ -344,25 +691,13 @@ CURLcode Curl_cf_quic_create(struct Curl_cfilter **pcf,
 #endif
 }
 
-bool Curl_conn_is_http3(const struct Curl_easy *data,
-                        const struct connectdata *conn,
-                        int sockindex)
-{
-#ifdef USE_NGTCP2
-  return Curl_conn_is_ngtcp2(data, conn, sockindex);
-#elif defined(USE_QUICHE)
-  return Curl_conn_is_quiche(data, conn, sockindex);
-#elif defined(USE_MSH3)
-  return Curl_conn_is_msh3(data, conn, sockindex);
-#else
-  return ((conn->handler->protocol & PROTO_FAMILY_HTTP) &&
-          (conn->httpversion == 30));
-#endif
-}
-
 CURLcode Curl_conn_may_http3(struct Curl_easy *data,
                              const struct connectdata *conn)
 {
+  if(conn->transport == TRNSPRT_UNIX) {
+    /* cannot do QUIC over a Unix domain socket */
+    return CURLE_QUIC_CONNECT_ERROR;
+  }
   if(!(conn->handler->flags & PROTOPT_SSL)) {
     failf(data, "HTTP/3 requested for non-HTTPS URL");
     return CURLE_URL_MALFORMAT;
@@ -373,7 +708,7 @@ CURLcode Curl_conn_may_http3(struct Curl_easy *data,
     return CURLE_URL_MALFORMAT;
   }
   if(conn->bits.httpproxy && conn->bits.tunnel_proxy) {
-    failf(data, "HTTP/3 is not supported over a HTTP proxy");
+    failf(data, "HTTP/3 is not supported over an HTTP proxy");
     return CURLE_URL_MALFORMAT;
   }
 #endif
@@ -381,7 +716,7 @@ CURLcode Curl_conn_may_http3(struct Curl_easy *data,
   return CURLE_OK;
 }
 
-#else /* ENABLE_QUIC */
+#else /* USE_HTTP3 */
 
 CURLcode Curl_conn_may_http3(struct Curl_easy *data,
                              const struct connectdata *conn)
@@ -392,4 +727,4 @@ CURLcode Curl_conn_may_http3(struct Curl_easy *data,
   return CURLE_NOT_BUILT_IN;
 }
 
-#endif /* !ENABLE_QUIC */
+#endif /* !USE_HTTP3 */

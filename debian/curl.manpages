@@ -1,1 +1,2 @@
-docs/curl.1
+usr/share/man/man1/curl.1
+debian/wcurl/wcurl.1
