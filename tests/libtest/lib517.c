@@ -34,6 +34,10 @@ static const struct dcheck dates[] = {
   {"Sun, 06 Nov 1994 08:49:37 GMT", 784111777 },
   {"Sunday, 06-Nov-94 08:49:37 GMT", 784111777 },
   {"Sun Nov  6 08:49:37 1994", 784111777 },
+  {"Sun Nov  6 8:49:37 1994", 784111777 },
+  {"Sun Nov  6 8:9:37 1994", 784109377 },
+  {"Sun Nov  6 008:09:37 1994", -1 },
+  {"Nov      Sun      6 8:9:7 1994", 784109347 },
   {"06 Nov 1994 08:49:37 GMT", 784111777 },
   {"06-Nov-94 08:49:37 GMT", 784111777 },
   {"Nov  6 08:49:37 1994", 784111777 },
@@ -94,6 +98,15 @@ static const struct dcheck dates[] = {
   {"Thu Apr 18 22:50:12 2007 GMT", 1176936612 },
   {"Thu Apr 18 2007 22:50:12 GMT", 1176936612 },
   {"Thu Apr 18 2007 GMT 22:50:12", 1176936612 },
+
+  {"\"Thu Apr 18 22:50:12 2007 GMT\"", 1176936612 },
+  {"-\"22:50:12 Thu Apr 18 2007 GMT\"", 1176936612 },
+  {"*\"Thu 22:50:12 Apr 18 2007 GMT\"", 1176936612 },
+  {";\"Thu Apr 22:50:12 18 2007 GMT\"", 1176936612 },
+  {".\"Thu Apr 18 22:50:12 2007 GMT\"", 1176936612 },
+  {"\"Thu Apr 18 2007 22:50:12 GMT\"", 1176936612 },
+  {"\"Thu Apr 18 2007 GMT 22:50:12\"", 1176936612 },
+
   {"Sat, 15-Apr-17 21:01:22 GMT", 1492290082 },
   {"15-Sat, Apr-17 21:01:22 GMT", 1492290082 },
   {"15-Sat, Apr 21:01:22 GMT 17", 1492290082 },
@@ -116,6 +129,9 @@ static const struct dcheck dates[] = {
   {"20111323 12:34:56", -1 },
   {"20110623 12:34:79", -1 },
   {"Wed, 31 Dec 2008 23:59:60 GMT", 1230768000 },
+  {"Wed, 31 Dec 2008 23:59:61 GMT", -1 },
+  {"Wed, 31 Dec 2008 24:00:00 GMT", -1 },
+  {"Wed, 31 Dec 2008 23:60:59 GMT", -1 },
   {"20110623 12:3", 1308830580 },
   {"20110623 1:3", 1308790980 },
   {"20110623 1:30", 1308792600 },
@@ -146,7 +162,7 @@ static const struct dcheck dates[] = {
   { NULL, 0 }
 };
 
-int test(char *URL)
+CURLcode test(char *URL)
 {
   int i;
   int error = 0;
@@ -157,10 +173,10 @@ int test(char *URL)
     time_t out = curl_getdate(dates[i].input, NULL);
     if(out != dates[i].output) {
       printf("WRONGLY %s => %ld (instead of %ld)\n",
-             dates[i].input, out, dates[i].output);
+             dates[i].input, (long)out, (long)dates[i].output);
       error++;
     }
   }
 
-  return error;
+  return error == 0 ? CURLE_OK : TEST_ERR_FAILURE;
 }

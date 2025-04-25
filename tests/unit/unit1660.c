@@ -41,7 +41,7 @@ unit_stop(void)
 #if defined(CURL_DISABLE_HTTP) || defined(CURL_DISABLE_HSTS)
 UNITTEST_START
 {
-  return 0; /* nothing to do when HTTP or HSTS are disabled */
+  puts("nothing to do when HTTP or HSTS are disabled");
 }
 UNITTEST_STOP
 #else
@@ -125,18 +125,19 @@ UNITTEST_START
   int i;
   const char *chost;
   CURL *easy;
-  if(!h)
-    return 1;
+  char savename[256];
+
+  abort_unless(h, "Curl_hsts_init()");
 
   curl_global_init(CURL_GLOBAL_ALL);
   easy = curl_easy_init();
   if(!easy) {
     Curl_hsts_cleanup(&h);
     curl_global_cleanup();
-    return 1;
+    abort_unless(easy, "curl_easy_init()");
   }
 
-  Curl_hsts_loadfile(easy, h, "log/input1660");
+  Curl_hsts_loadfile(easy, h, arg);
 
   for(i = 0; headers[i].host ; i++) {
     if(headers[i].hdr) {
@@ -155,25 +156,25 @@ UNITTEST_START
     }
 
     chost = headers[i].chost ? headers[i].chost : headers[i].host;
-    e = Curl_hsts(h, chost, TRUE);
+    e = Curl_hsts(h, chost, strlen(chost), TRUE);
     showsts(e, chost);
   }
 
-  printf("Number of entries: %zu\n", h->list.size);
+  printf("Number of entries: %zu\n", Curl_llist_count(&h->list));
 
   /* verify that it is exists for 7 seconds */
   chost = "expire.example";
   for(i = 100; i < 110; i++) {
-    e = Curl_hsts(h, chost, TRUE);
+    e = Curl_hsts(h, chost, strlen(chost), TRUE);
     showsts(e, chost);
     deltatime++; /* another second passed */
   }
 
-  (void)Curl_hsts_save(easy, h, "log/hsts1660");
+  msnprintf(savename, sizeof(savename), "%s.save", arg);
+  (void)Curl_hsts_save(easy, h, savename);
   Curl_hsts_cleanup(&h);
   curl_easy_cleanup(easy);
   curl_global_cleanup();
-  return unitfail;
 }
 UNITTEST_STOP
 #endif
