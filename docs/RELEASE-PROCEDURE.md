@@ -1,10 +1,14 @@
+<!--
+Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
+
+SPDX-License-Identifier: curl
+-->
+
 curl release procedure - how to do a release
 ============================================
 
 in the source code repo
 -----------------------
-
-- run `./scripts/copyright.pl` and correct possible omissions
 
 - edit `RELEASE-NOTES` to be accurate
 
@@ -16,10 +20,7 @@ in the source code repo
   tag and we use underscores instead of dots in the version number. Make sure
   the tag is GPG signed (using -s).
 
-- run `./maketgz 7.34.0` to build the release tarballs. It is important that
-  you run this on a machine with the correct set of autotools etc installed
-  as this is what then will be shipped and used by most users on \*nix like
-  systems.
+- run `./scripts/dmaketgz 7.34.0` to build the release tarballs.
 
 - push the git commits and the new tag
 
@@ -55,6 +56,10 @@ inform
 - send an email to curl-users, curl-announce and curl-library. Insert the
   RELEASE-NOTES into the mail.
 
+- if there are any advisories associated with the release, send each markdown
+  file to the above lists as well as to `oss-security@lists.openwall.com`
+  (unless the problem is unique to the non-open operating systems)
+
 celebrate
 ---------
 
@@ -66,28 +71,50 @@ curl release scheduling
 Release Cycle
 -------------
 
-We do releases every 8 weeks on Wednesdays. If critical problems arise, we can
-insert releases outside of the schedule or we can move the release date - but
-this is rare.
+We normally do releases every 8 weeks on Wednesdays. If important problems
+arise, we can insert releases outside the schedule or we can move the release
+date.
 
-Each 8 week release cycle is split in two 4-week periods.
+Each 8 week (56 days) release cycle is divided into three distinct periods:
 
-- During the first 4 weeks after a release, we allow new features and changes
-  to curl and libcurl. If we accept any such changes, we bump the minor number
-  used for the next release.
+- During the first 10 calendar days after a release, we are in "cool down". We
+  do not merge features but only bug-fixes. If a regression is reported, we
+  might do a follow-up patch release.
 
-- During the second 4-week period we do not merge any features or changes, we
-  then only focus on fixing bugs and polishing things to make a solid coming
-  release.
+- During the following 3 weeks (21 days) there is a feature window: we allow
+  new features and changes to curl and libcurl. If we accept any such changes,
+  we bump the minor number used for the next release.
 
-- After a regular procedure-following release (made on Wednesdays), the
-  feature window remains closed until the following Monday in case of special
-  actions or patch releases etc.
+- During the next 25 days we are in feature freeze. We do not merge any
+  features or changes, and we only focus on fixing bugs and polishing things
+  to make the pending release a solid one.
 
 If a future release date happens to end up on a "bad date", like in the middle
-of common public holidays or when the lead release manager is away traveling,
-the release date can be moved forwards or backwards a full week. This is then
+of common public holidays or when the lead release manager is unavailable, the
+release date can be moved forwards or backwards a full week. This is then
 advertised well in advance.
+
+Release Candidates
+------------------
+
+We ship release candidate tarballs on three occasions in preparation for the
+pending release:
+
+- Release candidate one (**rc1**) ships the same Saturday the feature freeze
+  starts. Twenty-five days before the release.
+
+- Release candidate two (**rc2**) ships nine days later, sixteen days before
+  the release. On a Monday.
+
+- Release candidate tree (**rc3**) ships nine days later, seven days before
+  the release. On a Wednesday.
+
+Release candidate tarballs are ephemeral and each such tarball is only kept
+around for a few weeks. They are provided on their dedicated webpage at:
+https://curl.se/rc/
+
+**Do not use release candidates in production**. They are work in progress.
+Use them for testing and verification only. Use actual releases in production.
 
 Critical problems
 -----------------
@@ -104,15 +131,11 @@ push for it.
 Coming dates
 ------------
 
-Based on the description above, here are some planned release dates (at the
-time of this writing):
+Based on the description above, here are some planned future release dates:
 
-- October 26, 2022 (7.86.0)
-- December 21, 2022
-- February 15, 2023 (last version 7 release, no feature window after)
-- March 20, 2023 (8.0.0 - curl 25 years)
-- April 17, 2023
-- July 12, 2023
-- September 6, 2023
-- November 1, 2023
-- December 27, 2023
+- February 5, 2025
+- April 2, 2025
+- May 28, 2025
+- July 23, 2025
+- September 17, 2025
+- November 12, 2025
