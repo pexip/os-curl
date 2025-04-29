@@ -1,3 +1,9 @@
+curl (8.13.0-1+pexip25u1) pexip-trixie; urgency=medium
+
+  * Initial trixie build
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Tue, 29 Apr 2025 22:29:41 +0100
+
 curl (8.13.0-1) unstable; urgency=medium
 
   * New upstream version 8.13.0
