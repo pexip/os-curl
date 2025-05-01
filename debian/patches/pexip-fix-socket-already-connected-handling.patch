@@ -8,9 +8,9 @@ Index: curl/lib/cf-socket.c
 ===================================================================
 --- curl.orig/lib/cf-socket.c
 +++ curl/lib/cf-socket.c
-@@ -1084,6 +1084,11 @@ static CURLcode cf_tcp_connect(struct Curl_cfilter *cf,
-     if(result)
-       goto out;
+@@ -1318,6 +1318,11 @@ static CURLcode cf_tcp_connect(struct Cu
+       return CURLE_OK;
+     }
  
 +    if(cf->connected) {
 +      *done = TRUE;
@@ -19,5 +19,4 @@ Index: curl/lib/cf-socket.c
 +
      /* Connect TCP socket */
      rc = do_connect(cf, data, cf->conn->bits.tcp_fastopen);
-     if(-1 == rc) {
-
+     error = SOCKERRNO;
