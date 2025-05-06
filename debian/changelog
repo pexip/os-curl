@@ -1,3 +1,43 @@
+curl (8.13.0-5) unstable; urgency=medium
+
+  * d/t/upstream-*: ensure clean build by calling override_dh_auto_clean
+  * d/salsa-ci: enable ARM build test
+
+ -- Aquila Macedo Costa <aquilamacedo@riseup.net>  Fri, 25 Apr 2025 21:31:31 +0100
+
+curl (8.13.0-4) unstable; urgency=medium
+
+  * d/tests/control: Install curl for the openssl tests
+  * d/p/autotools_install_shell_completion_files_on_cross_build: Fix FTCBFS,
+    thanks to Helmut Grohne (closes: #1103938)
+
+ -- Samuel Henrique <samueloph@debian.org>  Thu, 24 Apr 2025 00:02:26 +0100
+
+curl (8.13.0-3) unstable; urgency=medium
+
+  [ Carlos Henrique Lima Melara ]
+  * d/t/upstream-tests-*: use correct version of curl in tests
+
+  [ наб ]
+  * d/README.source: delete (false)
+
+  [ Matheus Polkorny ]
+  * d/copyright: Update to reflect upstream copyright changes
+
+  [ Samuel Henrique ]
+  * Update wcurl to v2025.04.20
+
+ -- Samuel Henrique <samueloph@debian.org>  Mon, 21 Apr 2025 00:23:44 +0100
+
+curl (8.13.0-2) unstable; urgency=medium
+
+  * Link with OpenSSL for the curl CLI (closes: #1095986)
+  * d/control: Recommends bash-completion for curl binary package
+  * d/p/scripts_completion_pl..: New patch to fix build reprocibility
+  * d/curl.NEWS: Add an entry to mention switch back to OpenSSL
+
+ -- Samuel Henrique <samueloph@debian.org>  Sun, 06 Apr 2025 22:13:18 +0100
+
 curl (8.13.0-1+pexip25u1) pexip-trixie; urgency=medium
 
   * Initial trixie build
@@ -10,7 +50,7 @@ curl (8.13.0-1) unstable; urgency=medium
   * Update Standards-Version to 4.7.2
   * Ship shell completions on crossbuilds. Upstream changed the way they are
     generated and it doesn't need to call the compiled binary anymore.
-  * d/copyright: Drop removed files genroot.sh and genserv.sh  
+  * d/copyright: Drop removed files genroot.sh and genserv.sh
   * d/watch: Point to GitHub for GA releases
 
  -- Samuel Henrique <samueloph@debian.org>  Wed, 02 Apr 2025 09:12:40 +0100
