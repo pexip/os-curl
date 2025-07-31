@@ -1,6 +1,7 @@
 ZZZgnutls-build.patch
 build-Divide-mit-krb5-gssapi-link-flags-between-LDFLAGS-a.patch
 11_omit-directories-from-config.patch
-scripts_completion_pl_sort_the_completion_file_for_all_shells.patch
-autotools_install_shell_completion_files_on_cross_build.patch
+tool_getparam_fix_ftp_pasv.patch
+curl_path_make_SFTP_handle_a_path.patch
+tool_operate_fix_return_code_when_retry_is_used_but_not_triggered.patch
 pexip-fix-socket-already-connected-handling.patch
