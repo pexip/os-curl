@@ -1,3 +1,25 @@
+curl (7.88.1-10+deb12u14+pexip24u1) pexip; urgency=medium
+
+  * New upstream release
+
+ -- Steve McIntyre <steve.mcintyre@pexip.com>  Tue, 09 Sep 2025 15:23:15 +0100
+
+curl (7.88.1-10+deb12u14) bookworm; urgency=medium
+
+  * d/p/0001-http_chunks-reset...: New patch to fix memory leak:
+    - Thanks to Daniel Stenberg and dheerajsangamkar for reporting the issue
+      and writing a patch
+
+ -- Samuel Henrique <samueloph@debian.org>  Sat, 19 Jul 2025 21:04:59 +0200
+
+curl (7.88.1-10+deb12u13) bookworm; urgency=medium
+
+  * Team upload.
+  * debian/patches/fix-CVE-2023-27534-regression-{1,2}.patch: add patches from
+    upstream to restore sftp://host/~ behaviour.
+
+ -- Carlos Henrique Lima Melara <charlesmelara@riseup.net>  Mon, 16 Jun 2025 20:56:01 -0300
+
 curl (7.88.1-10+deb12u12+pexip24u1) pexip; urgency=medium
 
   * New upstream release
