@@ -1,3 +1,9 @@
+curl (7.88.1-10+deb12u14+pexip24u2) pexip; urgency=medium
+
+  * Fix up CVE-2024-7264-1.patch to have the correct types.
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Mon, 27 Oct 2025 11:13:56 +0000
+
 curl (7.88.1-10+deb12u14+pexip24u1) pexip; urgency=medium
 
   * New upstream release
