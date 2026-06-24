@@ -42,6 +42,8 @@ Vcs-Browser: https://salsa.debian.org/debian/curl
 Homepage: https://curl.se/
 Rules-Requires-Root: no
 XS-Pexip-Upstream: http://deb.debian.org/debian/ trixie
+X-Pexip-Note: curl in PexOS is built without rtmp or ssh support as we
+ do not require them to be present.
 
 Package: curl
 Architecture: any
