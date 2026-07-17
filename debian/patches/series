@@ -26,3 +26,4 @@ CVE-2026-7168.patch
 CVE-2026-6429.patch
 
 pexip-fix-socket-already-connected-handling.patch
+pexip-skip-bad-tests.patch

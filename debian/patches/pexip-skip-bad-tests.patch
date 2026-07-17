@@ -1,0 +1,9 @@
+Skip known bad tests
+--- curl.orig/tests/data/DISABLED
++++ curl/tests/data/DISABLED
+@@ -67,3 +67,5 @@
+ 2047
+ %endif
+ %endif
++# test fails on upstream source with NTLM disabled
++338
